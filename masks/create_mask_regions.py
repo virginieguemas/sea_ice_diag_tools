@@ -1,3 +1,12 @@
+# This script defines a mask for each individual sea and ocean based #
+# on their official definition found in                              #
+#    IHO PUBLICATION S-23, Limits of Oceans and Seas,                #
+#       Draft 4th Edition, 2002                                      #
+# except for some adaptation to account for the discretization of    # 
+# the coastline on the ORCA1 grod as indicated in the comments.      #
+#                                                                    #
+# History : 2025 - initial version by Virginie Guemas                #
+######################################################################
 import sys
 import xarray as xr
 import datetime
@@ -41,11 +50,15 @@ shemisph = xr.where(latitude < 0, maskvar, 0)
 newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern Hemisphere'))
 #
 # 4. Antarctic Ocean
-antarct = xr.where(latitude < -55, maskvar, 0)
+antarct = xr.where(latitude < -50, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
 # 5. Ross Sea
-rossseax = xr.where(antarct & ((longitude <-140) | (longitude >160)), maskvar, 0)
+#    defined as: https://www.ncei.noaa.gov/archive/archive-management-system/OAS/bin/prd/jquery/seaname/details/185#:~:text=Definition%3A,of%20the%20Ross%20Ice%20Shelf.
+#    IHO PUBLICATION S-23, Limits of Oceans and Seas, Draft 4th Edition, 2002
+#    except for -72 defined arbitrarily to follow the coastline
+#    and 165.3 moved to 163 to follow the ORCA1 coastline
+rossseax = xr.where(((latitude < -71.18) & ((longitude > 170.14) | (longitude < -157.5))) | ((longitude>163) & (longitude < 170.14) & (latitude < -72)) , maskvar, 0)
 newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 #
 # 6. Amundsen Sea
@@ -55,6 +68,11 @@ newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Se
 # 7. Bellingshausen Sea
 bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar,0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
+# 
+# 8. Weddell Sea
+weddells = xr.where(antarct & (longitude >-65) & (longitude <-15), maskvar, 0)
+newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
+#
 
 # 5. Arctic Ocean
 #bool_arctic_1 = np.greater(marg,nhemisph)
@@ -517,12 +535,6 @@ dom_dict['Vilkitsky Strait'] = vilkystr
 #
 #
 #Simple boxes splitting the Antarctic Ocean...
-#
-#Weddell Sea
-#
-bool_weddll = np.logical_and(latitude<-55, np.logical_and(longitude>-65, longitude <-15))
-weddellx = np.where(bool_weddll,maskvar,0)
-dom_dict['Weddell Sea'] = weddellx
 #
 #
 #
