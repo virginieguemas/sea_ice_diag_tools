@@ -52,6 +52,9 @@ newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 amundsen = xr.where(antarct & (longitude>-140) & (longitude <-90), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
+# 7. Bellingshausen Sea
+bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar,0)
+newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 
 # 5. Arctic Ocean
 #bool_arctic_1 = np.greater(marg,nhemisph)
@@ -523,11 +526,6 @@ dom_dict['Weddell Sea'] = weddellx
 #
 #
 #
-#Bellingshausen Sea
-#
-bool_bellings = np.logical_and(latitude<-55, np.logical_and(longitude>-90, longitude <-65))
-bellings = np.where(bool_bellings,maskvar,0)
-dom_dict['Bellingshausen Sea'] = bellings
 #
 #
 #Atlantic-Antarctic
