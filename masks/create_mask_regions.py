@@ -64,7 +64,7 @@ amundsen = xr.where(antarct & (longitude>-140) & (longitude <-90), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
 # 7. Bellingshausen Sea
-bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar,0)
+bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar, 0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 # 
 # 8. Weddell Sea
@@ -76,6 +76,17 @@ newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshau
 weddells = xr.where(((latitude < -60) & (longitude > -57) & (longitude < -12.16)) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
+# 9. Lazarev Sea
+lazarevs = xr.where((latitude < -65) & (longitude > 0) & (longitude < 14), maskvar, 0)
+newmask['lazarevs'] = xr.DataArray(lazarevs, attrs=dict(long_name = 'Lazarev Sea'))
+#
+# 10. Riiser-Larsen Sea
+riiserla = xr.where((latitude < -65) & (longitude > 14) & (longitude < 33.45), maskvar, 0)
+newmask['riiserla'] = xr.DataArray(riiserla, attrs=dict(long_name = 'Riiser-Larsen Sea'))
+#
+# 11. Cosmonauts Sea
+cosmauno = xr.where((latitude < -65) & (longitude > 33.45) & (longitude < 53.48), maskvar, 0)
+newmask['cosmonau'] = xr.DataArray(cosmauno, attrs=dict(long_name = 'Cosmonauts Sea'))
 
 # 5. Arctic Ocean
 #bool_arctic_1 = np.greater(marg,nhemisph)
