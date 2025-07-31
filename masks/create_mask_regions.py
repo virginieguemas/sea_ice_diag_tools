@@ -4,6 +4,7 @@ import datetime
 import getpass
 #
 # temporary
+import numpy as np
 import matplotlib.pyplot as plt
 plt.figure()
 #
@@ -29,7 +30,7 @@ newmask = xr.Dataset(attrs=dict(description = 'Masks for individual seas and reg
 # Define each new mask for each region
 #
 # 1. Global ocean
-newmask['globsea'] = xr.DataArray(maskvar, attrs=dict(long_name = 'Global Ocean'))
+newmask['globocea'] = xr.DataArray(maskvar, attrs=dict(long_name = 'Global Ocean'))
 #
 # 2. Northern Hemisphere
 nhemisph = xr.where(latitude > 0,maskvar,0) 
@@ -41,21 +42,21 @@ newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern He
 #
 # 4. Antarctic Ocean
 antarct = xr.where(latitude < -55,maskvar,0)
-newmask['antarct'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
+newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
+#
+# 5. Mediterranean Sea
+bool_medit_1 = (latitude > 30) & (latitude < 40) & (longitude > -5) & (longitude <  0)
+bool_medit_2 = (latitude > 30) & (latitude < 46) & (longitude >  0) & (longitude < 28)
+bool_medit_3 = (latitude > 30) & (latitude < 40) & (longitude > 28) & (longitude < 40)
+mediterr = xr.where(bool_medit_1 | bool_medit_2 | bool_medit_3, maskvar, 0)
+newmask['mediterr'] = xr.DataArray(mediterr, attrs=dict(long_name = 'Mediterranean Sea'))
+#
 #
 # Write the output netcdf file
 #
 newmask.to_netcdf('mask.ArcticSeas.N3.2_O1L42.nc')
 sys.exit()
 
-# 5. Mediterranean Sea
-bool_medit_1 = np.logical_and(np.logical_and(latitude > 30,latitude < 40), np.logical_and(longitude>-5, longitude <0))
-bool_medit_2 = np.logical_and(np.logical_and(latitude > 30,latitude < 46), np.logical_and(longitude > 0, longitude <28))
-bool_medit_3 = np.logical_and(np.logical_and(latitude > 30,latitude < 40), np.logical_and(longitude > 28, longitude <40))
-bool_medit = np.logical_or(np.logical_or(bool_medit_1,bool_medit_2),bool_medit_3)
-mediterr = np.where(bool_medit, maskvar, 0)
-dom_dict['Mediterranean Sea'] = mediterr
-#
 #Baltic Sea
 #bool_baltic = np.
 #
