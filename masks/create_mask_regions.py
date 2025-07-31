@@ -44,8 +44,12 @@ newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern He
 antarct = xr.where(latitude < -55, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
-# 5. Amundsen Sea
-amundsen = xr.where((latitude < -55) & (longitude>-140) & (longitude <-90), maskvar, 0)
+# 5. Ross Sea
+rossseax = xr.where(antarct & ((longitude <-140) | (longitude >160)), maskvar, 0)
+newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
+#
+# 6. Amundsen Sea
+amundsen = xr.where(antarct & (longitude>-140) & (longitude <-90), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
 
@@ -516,15 +520,6 @@ dom_dict['Vilkitsky Strait'] = vilkystr
 bool_weddll = np.logical_and(latitude<-55, np.logical_and(longitude>-65, longitude <-15))
 weddellx = np.where(bool_weddll,maskvar,0)
 dom_dict['Weddell Sea'] = weddellx
-#
-#
-#Ross Sea
-#
-bool_ross_1 = np.logical_and(latitude<-55,longitude <-140)
-bool_ross_2 = np.logical_and(latitude<-55, longitude>160)
-bool_ross = np.logical_or(bool_ross_1,bool_ross_2)
-rossxxxx = np.where(bool_ross,maskvar,0)
-dom_dict['Ross Sea'] = rossxxxx
 #
 #
 #
