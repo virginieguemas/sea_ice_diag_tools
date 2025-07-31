@@ -50,14 +50,12 @@ shemisph = xr.where(latitude < 0, maskvar, 0)
 newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern Hemisphere'))
 #
 # 4. Antarctic Ocean
-antarct = xr.where(latitude < -50, maskvar, 0)
+antarct = xr.where(latitude < -60, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
 # 5. Ross Sea
-#    defined as: https://www.ncei.noaa.gov/archive/archive-management-system/OAS/bin/prd/jquery/seaname/details/185#:~:text=Definition%3A,of%20the%20Ross%20Ice%20Shelf.
-#    IHO PUBLICATION S-23, Limits of Oceans and Seas, Draft 4th Edition, 2002
-#    except for -72 defined arbitrarily to follow the coastline
-#    and 165.3 moved to 163 to follow the ORCA1 coastline
+#  72S defined arbitrarily to follow the western coastline
+#  165.3E changed to 163 to follow the ORCA1 coastline which advances further into the land than reality
 rossseax = xr.where(((latitude < -71.18) & ((longitude > 170.14) | (longitude < -157.5))) | ((longitude>163) & (longitude < 170.14) & (latitude < -72)) , maskvar, 0)
 newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 #
@@ -70,7 +68,12 @@ bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar,0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 # 
 # 8. Weddell Sea
-weddells = xr.where(antarct & (longitude >-65) & (longitude <-15), maskvar, 0)
+#  northern limit tilted close to 60S and set to 60S here
+#  eastern limit tilted westward with its southernmost point at 12.16E, set to 12.16E here
+#  western limit follows coastline near 60W until the tip of the Antartic Peninsula where it goes north
+#     tip of Antartic Peninsula in ORCA1 is 57W
+#  65S and 62W set to follow the ORCA1 coastline
+weddells = xr.where(((latitude < -60) & (longitude > -57) & (longitude < -12.16)) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
 
