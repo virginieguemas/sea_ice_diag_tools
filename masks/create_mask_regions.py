@@ -33,18 +33,29 @@ newmask = xr.Dataset(attrs=dict(description = 'Masks for individual seas and reg
 newmask['globocea'] = xr.DataArray(maskvar, attrs=dict(long_name = 'Global Ocean'))
 #
 # 2. Northern Hemisphere
-nhemisph = xr.where(latitude > 0,maskvar,0) 
+nhemisph = xr.where(latitude > 0, maskvar, 0) 
 newmask['nhemisph'] = xr.DataArray(nhemisph, attrs=dict(long_name = 'Northern Hemisphere'))
 #
 # 3. Southern Hemisphere
-shemisph = xr.where(latitude < 0,maskvar,0)
+shemisph = xr.where(latitude < 0, maskvar, 0)
 newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern Hemisphere'))
 #
 # 4. Antarctic Ocean
-antarct = xr.where(latitude < -55,maskvar,0)
+antarct = xr.where(latitude < -55, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
-# 5. Mediterranean Sea
+# 5. Amundsen Sea
+amundsen = xr.where((latitude < -55) & (longitude>-140) & (longitude <-90), maskvar, 0)
+newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
+#
+
+# 5. Arctic Ocean
+#bool_arctic_1 = np.greater(marg,nhemisph)
+#bool_arctic = np.logical_and(bool_arctic_1,latitude>0)
+#arcticoc = xr.where(np.logical_or(bool_arctic,bool_centrarc),maskvar,0)
+#newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
+#
+# 6. Mediterranean Sea
 bool_medit_1 = (latitude > 30) & (latitude < 40) & (longitude > -5) & (longitude <  0)
 bool_medit_2 = (latitude > 30) & (latitude < 46) & (longitude >  0) & (longitude < 28)
 bool_medit_3 = (latitude > 30) & (latitude < 40) & (longitude > 28) & (longitude < 40)
@@ -418,12 +429,6 @@ dom_dict['Eastern Central Arctic'] = ecentarc[0]
 #
 #
 #
-#Arctic Ocean
-#
-bool_arctic_1 = np.greater(marg,nhemisph)
-bool_arctic = np.logical_and(bool_arctic_1,latitude>0)
-arcticoc = np.where(np.logical_or(bool_arctic,bool_centrarc),maskvar,0)
-dom_dict['Arctic Ocean'] = arcticoc[0]
 #
 #
 #Baltic Sea
@@ -521,12 +526,6 @@ bool_ross = np.logical_or(bool_ross_1,bool_ross_2)
 rossxxxx = np.where(bool_ross,maskvar,0)
 dom_dict['Ross Sea'] = rossxxxx
 #
-#
-#Amundsen Sea
-#
-bool_amund = np.logical_and(latitude<-55, np.logical_and(longitude>-140, longitude <-90))
-amundsen = np.where(bool_amund,maskvar,0)
-dom_dict['Amundsen Sea'] = amundsen
 #
 #
 #Bellingshausen Sea
