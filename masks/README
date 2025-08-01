@@ -1,0 +1,8 @@
+This script creates masks for various individual seas and ocean 
+around the world according to their official definition.
+
+WARNING :
+It has been developped on a ORCA1 grid and some boxes are hardcoded
+to follow the discretized coastline. Changing the grid, it is 
+necessary to check whether the output masks follow the coastline
+wherever they are supposed to. 
