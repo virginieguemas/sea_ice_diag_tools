@@ -3,6 +3,8 @@ around the world according to their official definition.
 
 WARNING :
 It has been developped on a ORCA1 grid and some boxes are hardcoded
-to follow the discretized coastline. Changing the grid, it is 
-necessary to check whether the output masks follow the coastline
-wherever they are supposed to. 
+with latitudes and longitudes that allow to follow the discretized 
+coastline. Changing the grid, the coastline might be retreating in
+the lands or advancing on the seas and it is necessary to check 
+whether the output masks still follow the coastline wherever they 
+are supposed to. 

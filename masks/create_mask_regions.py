@@ -2,8 +2,10 @@
 # on their official definition found in                              #
 #    IHO PUBLICATION S-23, Limits of Oceans and Seas,                #
 #       Draft 4th Edition, 2002                                      #
+# Current link : 
+#       https://legacy.iho.int/mtg_docs/com_wg/S-23WG/S-23WG_Misc/Draft_2002/Draft_2002.htm
 # except for some adaptation to account for the discretization of    # 
-# the coastline on the ORCA1 grod as indicated in the comments.      #
+# the coastline on the ORCA1 grid as indicated in the comments.      #
 #                                                                    #
 # History : 2025 - initial version by Virginie Guemas                #
 ######################################################################
@@ -53,21 +55,21 @@ newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern He
 antarct = xr.where(latitude < -60, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
-# 5. Ross Sea
+# 4a. Ross Sea
 #  72S defined arbitrarily to follow the western coastline
 #  165.3E changed to 163 to follow the ORCA1 coastline which advances further into the land than reality
 rossseax = xr.where(((latitude < -71.18) & ((longitude > 170.14) | (longitude < -157.5))) | ((longitude>163) & (longitude < 170.14) & (latitude < -72)) , maskvar, 0)
 newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 #
-# 6. Amundsen Sea
+# 4b. Amundsen Sea
 amundsen = xr.where(antarct & (longitude>-140) & (longitude <-90), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
-# 7. Bellingshausen Sea
+# 4c. Bellingshausen Sea
 bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar, 0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 # 
-# 8. Weddell Sea
+# 4d. Weddell Sea
 #  northern limit tilted close to 60S and set to 60S here
 #  eastern limit tilted westward with its southernmost point at 12.16E, set to 12.16E here
 #  western limit follows coastline near 60W until the tip of the Antartic Peninsula where it goes north
@@ -76,17 +78,49 @@ newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshau
 weddells = xr.where(((latitude < -60) & (longitude > -57) & (longitude < -12.16)) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
-# 9. Lazarev Sea
+# 4e. Lazarev Sea
 lazarevs = xr.where((latitude < -65) & (longitude > 0) & (longitude < 14), maskvar, 0)
 newmask['lazarevs'] = xr.DataArray(lazarevs, attrs=dict(long_name = 'Lazarev Sea'))
 #
-# 10. Riiser-Larsen Sea
+# 4f. Riiser-Larsen Sea
 riiserla = xr.where((latitude < -65) & (longitude > 14) & (longitude < 33.45), maskvar, 0)
 newmask['riiserla'] = xr.DataArray(riiserla, attrs=dict(long_name = 'Riiser-Larsen Sea'))
 #
-# 11. Cosmonauts Sea
+# 4g. Cosmonauts Sea
 cosmauno = xr.where((latitude < -65) & (longitude > 33.45) & (longitude < 53.48), maskvar, 0)
 newmask['cosmonau'] = xr.DataArray(cosmauno, attrs=dict(long_name = 'Cosmonauts Sea'))
+# 
+# 4h. Cooperation Sea
+cooperat = xr.where((latitude < -65) & (longitude > 53.48) & (longitude < 81.4), maskvar, 0)
+newmask['cooperat'] = xr.DataArray(cooperat, attrs=dict(long_name = 'Cooperation Sea'))
+#
+# 4i. Davis Sea
+#  northern limit tilted from 65S on the west to 64S on the east, set to 65S 
+davissea = xr.where((latitude < -65) & (longitude > 81.4) & (longitude < 95.35), maskvar, 0)
+newmask['davissea'] = xr.DataArray(davissea, attrs=dict(long_name = 'Davis Sea'))
+# 
+# 4ibis. Tryoshnikova Gulf
+tryoshni = xr.where((latitude < -65) & (longitude > 88.01) & (longitude < 95.35), maskvar, 0)
+newmask['tryoshni'] = xr.DataArray(tryoshni, attrs=dict(long_name = 'Tryoshnikova Gulf'))
+#
+# 4j. Mawson sea
+mawsonse = xr.where((latitude < -64) & (longitude > 95.35) & (longitude < 113.12), maskvar, 0)
+newmask['mawsonse'] = xr.DataArray(mawsonse, attrs=dict(long_name = 'Mawson Sea'))
+#
+# 4k. Dumont d'Urville Sea
+dumontdu = xr.where((latitude < -64) & (longitude > 136.12) & (longitude < 146.5), maskvar, 0)
+newmask['dumontdu'] = xr.DataArray(dumontdu, attrs=dict(long_name = 'Dumont d\'Urville Sea'))
+#
+# 4l. Somov Sea
+# northern limit tilted from 64S on the west to 66S to the east, set to 65S 
+somovsea = xr.where((latitude < -65) & (longitude > 146.5) & (longitude < 162.19), maskvar, 0)
+latlim = -65
+for xlon in np.arange(162.19,170.14):
+  latlim = latlim -0.7725
+  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1) ) & (longitude < 170.14) & (latitude > -72), 1, somovsea)
+newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea'))
+
+
 
 # 5. Arctic Ocean
 #bool_arctic_1 = np.greater(marg,nhemisph)
