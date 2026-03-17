@@ -58,15 +58,17 @@ newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Oc
 # 4a. Ross Sea
 #  72S defined arbitrarily to follow the western coastline
 #  165.3E changed to 163 to follow the ORCA1 coastline which advances further into the land than reality
-rossseax = xr.where(((latitude < -71.18) & ((longitude > 170.14) | (longitude < -157.5))) | ((longitude>163) & (longitude < 170.14) & (latitude < -72)) , maskvar, 0)
+rossseax = xr.where(((latitude < -71.18) & ((longitude > 170.14) | (longitude < -157.5))) | ((longitude > 163) & (longitude < 170.14) & (latitude < -72)), maskvar, 0)
 newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 #
 # 4b. Amundsen Sea
-amundsen = xr.where(antarct & (longitude>-140) & (longitude <-90), maskvar, 0)
+amundsen = xr.where((latitude < -72.06) & (longitude > -126.15) & (longitude < -102.28), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
 # 4c. Bellingshausen Sea
-bellings = xr.where(antarct & (longitude >-90) & (longitude <-65), maskvar, 0)
+# northern limit tilted northeastward between Cape Flying Fish and Peter I island represented with staircase here
+# slithtly tilted southeastward between Peter I island and Adelaide Island set to 66.38S here
+bellings = xr.where(((latitude < -72.06) & (longitude > -102.28) & (longitude<-96.01)) | ((latitude < -69.01) & (longitude > -96.01) & (longitude<-93.01)) | ((latitude < -67.66) & (longitude > -93.01) & (longitude<-90.37)) | ((longitude > -90.37) & (longitude < -67.48) & (latitude < -66.38)), maskvar, 0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 # 
 # 4d. Weddell Sea
@@ -120,7 +122,13 @@ for xlon in np.arange(162.19,170.14):
   somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1) ) & (longitude < 170.14) & (latitude > -72), 1, somovsea)
 newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea'))
 
+# 4m Drake Passage
 
+# To be filled here
+
+# 4n Bransfield Strait
+
+# To be filled here
 
 # 5. Arctic Ocean
 #bool_arctic_1 = np.greater(marg,nhemisph)
