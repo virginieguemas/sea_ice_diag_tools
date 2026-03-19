@@ -19,24 +19,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 plt.figure()
 #
+
 # Input arguments
-#
-grid = 'NEMO 3.2 ORCA1L42'
-meshfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
-option_grid = 't'
-lon_name = 'nav_lon'
-lat_name = 'nav_lat'
-#
-# Read land-sea mask and coordinates
-#
-maskfile = xr.open_dataset(meshfile)
-maskvar = maskfile[option_grid + 'mask'].isel(t = 0,z = 0)
-longitude = maskfile[lon_name]
-latitude  = maskfile[lat_name]
-#
+#grid = 'cnrmcm7'
+grid = 'N3.2_O1L42'
+
+# Read longitudes, latitudes and land-sea mask
+
+if grid == 'N3.2_O1L42': 
+   
+   maskfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
+   masktmp = xr.open_dataset(maskfile)
+   msk_name = 'tmask'
+   maskvar = masktmp[msk_name].isel(t = 0,z = 0)
+
+   gridfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
+   lon_name = 'nav_lon'
+   lat_name = 'nav_lat'
+  
+   outfile = 'mask.ArcticSeas.N3.2_O1L42.nc'
+
+elif grid == 'cnrmcm7':
+
+   maskfile = '/home/guemas/mytools/cnrmcm7/masks/masks.nc'
+   masktmp = xr.open_dataset(maskfile)
+   msk_name = 'nogt.msk'
+   maskvar = 1 - masktmp[msk_name]
+
+   gridfile = '/home/guemas/mytools/cnrmcm7/masks/grids.nc'
+   lat_name='nogt.lat'
+   lon_name='nogt.lon'
+
+   outfile = 'mask.ArcticSeas.cnrmcm7.nc'
+
+else:
+
+   sys.exit('unknown input grid')
+
+
+gridtmp = xr.open_dataset(gridfile)
+longitude = gridtmp[lon_name]
+latitude = gridtmp[lat_name]
+
+
 # Define output dataset containing all new masks
 #
-newmask = xr.Dataset(attrs=dict(description = 'Masks for individual seas and regions',grid = grid, initial_meshfile = meshfile, based_on_latitude = lat_name, based_on_longitude=lon_name, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
+newmask = xr.Dataset(attrs=dict(description = 'Masks for individual seas and regions', initial_gridfile = gridfile, based_on_latitude = lat_name, based_on_longitude=lon_name, initial_maskfile = maskfile, based_on_mask_variable = msk_name, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
 #
 # Define each new mask for each region
 #
@@ -67,8 +95,17 @@ newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Se
 #
 # 4c. Bellingshausen Sea
 # northern limit tilted northeastward between Cape Flying Fish and Peter I island represented with staircase here
-# slithtly tilted southeastward between Peter I island and Adelaide Island set to 66.38S here
-bellings = xr.where(((latitude < -72.06) & (longitude > -102.28) & (longitude<-96.01)) | ((latitude < -69.01) & (longitude > -96.01) & (longitude<-93.01)) | ((latitude < -67.66) & (longitude > -93.01) & (longitude<-90.37)) | ((longitude > -90.37) & (longitude < -67.48) & (latitude < -66.38)), maskvar, 0)
+# slightly tilted southeastward between Peter I island and Adelaide Island set to 66.38S here
+bellings = xr.where(((latitude < -72.06) & (longitude > -102.28) & (longitude < -90.37)), maskvar, 0)  
+latlim = -72.06
+print(latlim)
+for xlon in np.arange(-101.28,-90.37):
+  latlim = latlim +0.33
+  bellings = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)), maskvar, bellings)
+for xlon in np.arange(-90.37,-67.48,2):
+  latlim = latlim +0.171
+  bellings = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+2)), maskvar, bellings)
+
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 # 
 # 4d. Weddell Sea
@@ -136,6 +173,9 @@ newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea')
 #arcticoc = xr.where(np.logical_or(bool_arctic,bool_centrarc),maskvar,0)
 #newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
 #
+# 5a. 
+
+
 # 6. Mediterranean Sea
 bool_medit_1 = (latitude > 30) & (latitude < 40) & (longitude > -5) & (longitude <  0)
 bool_medit_2 = (latitude > 30) & (latitude < 46) & (longitude >  0) & (longitude < 28)
@@ -146,7 +186,7 @@ newmask['mediterr'] = xr.DataArray(mediterr, attrs=dict(long_name = 'Mediterrane
 #
 # Write the output netcdf file
 #
-newmask.to_netcdf('mask.ArcticSeas.N3.2_O1L42.nc')
+newmask.to_netcdf(outfile)
 sys.exit()
 
 #Baltic Sea
