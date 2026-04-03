@@ -21,8 +21,8 @@ plt.figure()
 #
 
 # Input arguments
-#grid = 'cnrmcm7'
-grid = 'N3.2_O1L42'
+grid = 'cnrmcm7'
+#grid = 'N3.2_O1L42'
 
 # Read longitudes, latitudes and land-sea mask
 
@@ -41,14 +41,23 @@ if grid == 'N3.2_O1L42':
 
 elif grid == 'cnrmcm7':
 
-   maskfile = '/home/guemas/mytools/cnrmcm7/masks/masks.nc'
+   maskfile = '~/mytools/cnrmcm7/masks/mesh_mask.nc'
    masktmp = xr.open_dataset(maskfile)
-   msk_name = 'nogt.msk'
-   maskvar = 1 - masktmp[msk_name]
+   msk_name = 'tmaskutil'
+   maskvar = masktmp[msk_name].squeeze()
 
-   gridfile = '/home/guemas/mytools/cnrmcm7/masks/grids.nc'
-   lat_name='nogt.lat'
-   lon_name='nogt.lon'
+   #maskfile = '/home/guemas/mytools/cnrmcm7/masks/masks.nc'
+   #masktmp = xr.open_dataset(maskfile)
+   #msk_name = 'nogt.msk'
+   #maskvar = 1 - masktmp[msk_name]
+
+   gridfile = '/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc'
+   lon_name = 'glamt'
+   lat_name = 'gphit'
+
+   #gridfile = '/home/guemas/mytools/cnrmcm7/masks/grids.nc'
+   #lat_name='nogt.lat'
+   #lon_name='nogt.lon'
 
    outfile = 'mask.ArcticSeas.cnrmcm7.nc'
 
@@ -58,9 +67,14 @@ else:
 
 
 gridtmp = xr.open_dataset(gridfile)
-longitude = gridtmp[lon_name]
-latitude = gridtmp[lat_name]
+longitude = gridtmp[lon_name].squeeze()
+latitude = gridtmp[lat_name].squeeze()
 
+umsk    = masktmp['umask'].squeeze()
+vmsk    = masktmp['vmask'].squeeze()
+
+if (latitude.shape != longitude.shape):
+    sys.exit('Latitudes, longitudes and mask don\'t have the same dimensions')
 
 # Define output dataset containing all new masks
 #
@@ -98,7 +112,6 @@ newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Se
 # slightly tilted southeastward between Peter I island and Adelaide Island set to 66.38S here
 bellings = xr.where(((latitude < -72.06) & (longitude > -102.28) & (longitude < -90.37)), maskvar, 0)  
 latlim = -72.06
-print(latlim)
 for xlon in np.arange(-101.28,-90.37):
   latlim = latlim +0.33
   bellings = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)), maskvar, bellings)
@@ -173,7 +186,21 @@ newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea')
 #arcticoc = xr.where(np.logical_or(bool_arctic,bool_centrarc),maskvar,0)
 #newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
 #
-# 5a. 
+# 5a. Fram Strait
+#
+# I could not find an official definition for Fram Strait. Here, it is 
+# chosen as following 80N between Greenland (20W) and Svalbard (18E)
+
+framstra = xr.where((longitude > -20) & (longitude < 18), maskvar, 0)
+for jx in np.arange(latitude.shape[1]):
+  jy = np.argmin(np.abs(latitude[:,jx].values-80))
+  addpoint = False
+  if framstra[jy, jx] > 0.5: 
+    addpoint = True
+  framstra[: , jx] = 0.
+  if addpoint:
+    framstra[jy, jx] = 1.
+newmask['framstra'] = xr.DataArray(framstra, attrs=dict(long_name = 'Fram Strait'))
 
 
 # 6. Mediterranean Sea
