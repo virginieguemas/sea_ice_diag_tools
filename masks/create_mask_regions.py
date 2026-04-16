@@ -41,23 +41,18 @@ if grid == 'N3.2_O1L42':
 
 elif grid == 'cnrmcm7':
 
-   maskfile = '~/mytools/cnrmcm7/masks/mesh_mask.nc'
-   masktmp = xr.open_dataset(maskfile)
-   msk_name = 'tmaskutil'
-   maskvar = masktmp[msk_name].squeeze()
-
-   #maskfile = '/home/guemas/mytools/cnrmcm7/masks/masks.nc'
-   #masktmp = xr.open_dataset(maskfile)
-   #msk_name = 'nogt.msk'
-   #maskvar = 1 - masktmp[msk_name]
+   maskfile  = '~/mytools/cnrmcm7/masks/mesh_mask.nc'
+   masktmp   = xr.open_dataset(maskfile)
+   msk_name  = 'tmaskutil'
+   umsk_name = 'umaskutil'
+   vmsk_name = 'vmaskutil'
+   maskvar   = masktmp[msk_name].squeeze()
+   umaskvar  = masktmp[umsk_name].squeeze()
+   vmaskvar  = masktmp[vmsk_name].squeeze()
 
    gridfile = '/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc'
    lon_name = 'glamt'
    lat_name = 'gphit'
-
-   #gridfile = '/home/guemas/mytools/cnrmcm7/masks/grids.nc'
-   #lat_name='nogt.lat'
-   #lon_name='nogt.lon'
 
    outfile = 'mask.ArcticSeas.cnrmcm7.nc'
 
@@ -65,13 +60,9 @@ else:
 
    sys.exit('unknown input grid')
 
-
 gridtmp = xr.open_dataset(gridfile)
 longitude = gridtmp[lon_name].squeeze()
 latitude = gridtmp[lat_name].squeeze()
-
-umsk    = masktmp['umask'].squeeze()
-vmsk    = masktmp['vmask'].squeeze()
 
 if (latitude.shape != longitude.shape):
     sys.exit('Latitudes, longitudes and mask don\'t have the same dimensions')
@@ -200,7 +191,11 @@ for jx in np.arange(latitude.shape[1]):
   framstra[: , jx] = 0.
   if addpoint:
     framstra[jy, jx] = 1.
-newmask['framstra'] = xr.DataArray(framstra, attrs=dict(long_name = 'Fram Strait'))
+framstru = xr.where(framstra, umaskvar, 0)
+framstrv = xr.where(framstra, vmaskvar, 0)
+newmask['framstra'] = xr.DataArray(framstra, attrs=dict(long_name = 'Fram Strait on t-grid'))
+newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait on u-grid'))
+newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
 
 
 # 6. Mediterranean Sea
