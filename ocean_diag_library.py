@@ -6,11 +6,12 @@
 ##########################################################################
 import xarray as xr
 import numpy as np
+import sys
 #
 ##########################################################################
-def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
+def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward):
 
-  """ Computes the mass and freshwater transports through a section 
+    """ Computes the mass and freshwater transports through a section 
       provided by umask/vmask. The section can be curved up to a certain
       point : for each section point, the local orientation of the section is
       computed using the two closest points on the section and the transport
@@ -41,7 +42,7 @@ def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
       HISTORY:
          Creation in 2026 by Virginie Guemas (CNRS/CNRM)
          
-  """
+    """
     # ==========================================================================
     # Grid dimensions
     # ==========================================================================
@@ -70,13 +71,13 @@ def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
     vmask2d = vmask.to_numpy().reshape((lz, ly*lx))
     uind = np.where(umask2d[0,] > 0.5)
     vind = np.where(vmask2d[0,] > 0.5)
-    umask2dmask = umask2d[, np.union1d(uind,vind)]
-    vmask2dmask = vmask2d[, np.union1d(uind,vind)]
+    umask2dmask = umask2d[:, np.union1d(uind,vind)]
+    vmask2dmask = vmask2d[:, np.union1d(uind,vind)]
     
     e3u2d = umask.to_numpy().reshape((lz, ly*lx))
     e3v2d = vmask.to_numpy().reshape((lz, ly*lx))
-    e3u2dmask = e3u2d[, np.union1d(uind,vind)]
-    e3v2dmask = e3v2d[, np.union1d(uind,vind)]
+    e3u2dmask = e3u2d[:, np.union1d(uind,vind)]
+    e3v2dmask = e3v2d[:, np.union1d(uind,vind)]
     
     # Dimensions y,x to y*x and then select section points
     lon1d = lon.to_numpy().reshape((ly*lx,))
@@ -94,12 +95,12 @@ def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
     e2v1dmask = e2v1d[np.union1d(uind,vind)]
     
     # Dimensions t, z, y, x to z, y*x and then select section points
-    u3d = u.to_numpy().reshape((lt  lz, ly*lx))
+    u3d = u.to_numpy().reshape((lt, lz, ly*lx))
     v3d = v.to_numpy().reshape((lt, lz, ly*lx))
     s3d = s.to_numpy().reshape((lt, lz, ly*lx))
-    u3dmask = u3d[,, np.union1d(uind,vind)]
-    v3dmask = v3d[,, np.union1d(uind,vind)]
-    s3dmask = s3d[,, np.union1d(uind,vind)]
+    u3dmask = u3d[:,:, np.union1d(uind,vind)]
+    v3dmask = v3d[:,:, np.union1d(uind,vind)]
+    s3dmask = s3d[:,:, np.union1d(uind,vind)]
     
     # Empty outputs
     volume_transport     = np.zeros(lt)
@@ -152,11 +153,9 @@ def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
     # Water volume transport  
     # ==========================================================================
       
-      volume_transport[jt] = volume_transport[jt] + 
-        unorm * e2u1dmask [jpt] * e3u2dmask[jz, jpt] * umask2dmask[jz, jpt]
+      volume_transport[jt] = volume_transport[jt] + unorm * e2u1dmask [jpt] * e3u2dmask[jz, jpt] * umask2dmask[jz, jpt]
         
-      volume_transport[jt] = volume_transport[jt] + 
-        vnorm * e1v1dmask [jpt] * e3v2dmask[jz, jpt] * vmask2dmask[jz, jpt]
+      volume_transport[jt] = volume_transport[jt] + vnorm * e1v1dmask [jpt] * e3v2dmask[jz, jpt] * vmask2dmask[jz, jpt]
     
       volume_transport[jt] = volume_transport[jt] / 1e6
     
@@ -164,20 +163,18 @@ def transport(u,v,s,e1u,e2u,e1v,e2v,e3u,e3v,lat,lon,umask,vmask,xward,yward)
     # Freshwater transport 
     # ==========================================================================
       
-      freshwater_transport[jt] = freshwater_transport[jt] + 
-        unorm * ((Sref - s2dmask[jt, jz, jpt] )/Sref) * e2u1dmask [jpt] * e3u2dmask[jz, jpt] * umask2dmask[jz, jpt]
+      freshwater_transport[jt] = freshwater_transport[jt] + unorm * ((Sref - s3dmask[jt, jz, jpt] )/Sref) * e2u1dmask [jpt] * e3u2dmask[jz, jpt] * umask2dmask[jz, jpt]
     
     
-      freshwater_transport[jt] = freshwater_transport[jt] + 
-        vnorm * ((Sref - s2dmask[jt, jz, jpt] )/Sref) * e1v1dmask [jpt] * e3v2dmask[jz, jpt] * vmask2dmask[jz, jpt]
+      freshwater_transport[jt] = freshwater_transport[jt] + vnorm * ((Sref - s3dmask[jt, jz, jpt] )/Sref) * e1v1dmask [jpt] * e3v2dmask[jz, jpt] * vmask2dmask[jz, jpt]
     
       freshwater_transport[jt] = freshwater_transport[jt] / 1e6
     
     # ==========================================================================
     # Outputs
     # ==========================================================================
-
-    transports['volume_transport'] = xr.DataArray(volume_transport, dims = ('time'), attrs = {'long_name':'Water volume transport', units = 'Sv'}) 
-    transports['freshwater_transport'] = xr.DataArray(freshwater_transport, dims = ('time'), attrs = {'long_name':'Freshwater transport', units = 'Sv'}) 
+    
+    transports['volume_transport'] = xr.DataArray(volume_transport, dims = ('time'), attrs = {'long_name':'Water volume transport', 'units':'Sv'}) 
+    transports['freshwater_transport'] = xr.DataArray(freshwater_transport, dims = ('time'), attrs = {'long_name':'Freshwater transport', 'units':'Sv'}) 
     
     return transports
