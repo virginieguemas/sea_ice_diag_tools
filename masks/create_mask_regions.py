@@ -197,6 +197,99 @@ newmask['framstra'] = xr.DataArray(framstra, attrs=dict(long_name = 'Fram Strait
 newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait on u-grid'))
 newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
 
+# 5b-5q. Arctic Ocean sub-divisions, based on
+#    IHO S-23, Draft 2002, Chapter 9 - Arctic Ocean and its sub-divisions
+# Boundaries below are simplified (straight lines / a small number of
+# latitude-longitude boxes) approximations of the official turning points
+# given in the chapter, adapted where needed to the ORCA1 coastline.
+#
+# 5b. East Siberian Sea (S-23 9.1)
+#  between Novosibirskiye Ostrova and Ostrov Vrangelya
+#  the northern shelf-edge limit tilts from 79N (at 139E) down to 76N (at 180E),
+#  approximated here with two longitude bands
+eastsibe = xr.where(((longitude > 139) & (longitude <= 160) & (latitude > 69.58) & (latitude < 79)) | ((longitude > 160) & (longitude < 180) & (latitude > 69.58) & (latitude < 76)), maskvar, 0)
+newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
+#
+# 5c. Laptev Sea (S-23 9.2)
+#  eastern limit shared with the East Siberian Sea at 139E
+#  western limit (following the Severnaya Zemlya archipelago) approximated at 100E
+laptevse = xr.where((latitude > 72.88) & (latitude < 81) & (longitude > 100) & (longitude < 139), maskvar, 0)
+newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
+#
+# 5d. Kara Sea (S-23 9.3)
+#  western limit follows the Novaya Zemlya archipelago, approximated by two
+#  latitude bands separated at 77N (Mys Zhelaniya)
+karaseax = xr.where(((latitude > 69.6) & (latitude < 77) & (longitude > 55) & (longitude < 100)) | ((latitude >= 77) & (latitude < 81) & (longitude > 60) & (longitude < 100)), maskvar, 0)
+newmask['karaseax'] = xr.DataArray(karaseax, attrs=dict(long_name = 'Kara Sea'))
+#
+# 5e. Barents Sea (S-23 9.4)
+#  excludes the White Sea (see 5f); western limit follows the Norwegian coast,
+#  Bjornoya and Svalbard, approximated by three latitude bands
+barentse = xr.where(((latitude > 68.1) & (latitude < 74) & (longitude > 25.78) & (longitude < 55)) | ((latitude >= 74) & (latitude < 77) & (longitude > 19) & (longitude < 55)) | ((latitude >= 77) & (latitude < 81) & (longitude > 16.5) & (longitude < 60)), maskvar, 0)
+newmask['barentse'] = xr.DataArray(barentse, attrs=dict(long_name = 'Barents Sea'))
+#
+# 5f. White Sea (S-23 9.5)
+#  gulf south of the Barents Sea; common limit at 68.1N (Mys Svyatoy Nos to Mys Kanin Nos)
+whitesea = xr.where((latitude > 63) & (latitude < 68.1) & (longitude > 33) & (longitude < 45), maskvar, 0)
+newmask['whitesea'] = xr.DataArray(whitesea, attrs=dict(long_name = 'White Sea'))
+#
+# 5g. Greenland Sea (S-23 9.6)
+#  bounded by Svalbard on the east and Jan Mayen on the south
+greenlds = xr.where((latitude > 70.15) & (latitude < 83.4) & (longitude > -25) & (longitude < 16.5), maskvar, 0)
+newmask['greenlds'] = xr.DataArray(greenlds, attrs=dict(long_name = 'Greenland Sea'))
+#
+# 5h. Norwegian Sea (S-23 9.7)
+#  eastern limit follows the Norwegian coast, Bjornoya and southern Svalbard,
+#  approximated by three latitude bands
+norwegia = xr.where(((latitude > 61) & (latitude < 71.17) & (longitude > -9) & (longitude < 4.67)) | ((latitude >= 71.17) & (latitude < 74) & (longitude > -9) & (longitude < 25.78)) | ((latitude >= 74) & (latitude < 76.47) & (longitude > -9) & (longitude < 19.12)), maskvar, 0)
+newmask['norwegia'] = xr.DataArray(norwegia, attrs=dict(long_name = 'Norwegian Sea'))
+#
+# 5i. Iceland Sea (S-23 9.8)
+#  the western limit extends into the Denmark Strait, between Iceland and Greenland
+icelands = xr.where(((latitude > 62.35) & (latitude < 70.83) & (longitude > -24.53) & (longitude < -6.25)) | ((latitude > 65.5) & (latitude < 70.15) & (longitude > -32.18) & (longitude < -24.53)), maskvar, 0)
+newmask['icelands'] = xr.DataArray(icelands, attrs=dict(long_name = 'Iceland Sea'))
+#
+# 5j. Davis Strait (S-23 9.9)
+#  between Baffin Island and Greenland
+davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > -67.17) & (longitude < -44.83), maskvar, 0)
+newmask['davisstr'] = xr.DataArray(davisstr, attrs=dict(long_name = 'Davis Strait'))
+#
+# 5k. Hudson Strait (S-23 9.10)
+#  between northern Quebec and southern Baffin Island
+hudsonst = xr.where((latitude > 60.4) & (latitude < 64.43) & (longitude > -80.98) & (longitude < -64.43), maskvar, 0)
+newmask['hudsonst'] = xr.DataArray(hudsonst, attrs=dict(long_name = 'Hudson Strait'))
+#
+# 5l. Hudson Bay (S-23 9.11)
+#  Foxe Basin is excluded here, as S-23 attributes it to the Northwestern Passages
+hudsonba = xr.where((latitude > 51) & (latitude < 66.2) & (longitude > -95) & (longitude < -78.1), maskvar, 0)
+newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
+#
+# 5m. Baffin Bay (S-23 9.12)
+#  between Ellesmere/Devon/Bylot/Baffin Islands and western Greenland
+baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > -80.23) & (longitude < -51.75), maskvar, 0)
+newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
+#
+# 5n. Lincoln Sea (S-23 9.13)
+#  between northern Ellesmere Island and northern Greenland
+lincolns = xr.where((latitude > 82.35) & (latitude < 83.65) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
+newmask['lincolns'] = xr.DataArray(lincolns, attrs=dict(long_name = 'Lincoln Sea'))
+#
+# 5o. Northwestern Passages (S-23 9.14)
+#  Canadian Arctic Archipelago; simplified as a single envelope box, as the
+#  actual channels closely follow the surrounding islands (handled by the land-sea mask)
+nwpassag = xr.where((latitude > 63.78) & (latitude < 81.62) & (longitude > -128.03) & (longitude < -75.17), maskvar, 0)
+newmask['nwpassag'] = xr.DataArray(nwpassag, attrs=dict(long_name = 'Northwestern Passages'))
+#
+# 5p. Beaufort Sea (S-23 9.15)
+#  off the northern coasts of Alaska and Canada
+beaufort = xr.where((latitude > 70.58) & (latitude < 76.33) & (longitude > -156.47) & (longitude < -122.58), maskvar, 0)
+newmask['beaufort'] = xr.DataArray(beaufort, attrs=dict(long_name = 'Beaufort Sea'))
+#
+# 5q. Chukchi Sea (S-23 9.16)
+#  straddles the date line, between Ostrov Vrangelya and Point Barrow
+chukchis = xr.where((latitude > 66.18) & (latitude < 71.53) & ((longitude > 170.58) | (longitude < -156.47)), maskvar, 0)
+newmask['chukchis'] = xr.DataArray(chukchis, attrs=dict(long_name = 'Chukchi Sea'))
+
 
 # 6. Mediterranean Sea
 bool_medit_1 = (latitude > 30) & (latitude < 40) & (longitude > -5) & (longitude <  0)
