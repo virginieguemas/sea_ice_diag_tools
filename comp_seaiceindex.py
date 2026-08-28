@@ -9,6 +9,7 @@ import os
 import datetime
 import getpass
 import argparse
+import matplotlib.pyplot as plt
 
 # Input arguments
 parser = argparse.ArgumentParser(description='Area-Averages a variable (2d/3d/4d) in each of the seas described into the mask file')
@@ -54,12 +55,12 @@ else:
   sys.exit('Variable missing from input file')
 
 if dxvar in grid:
-  dx = grid[dxvar]
+  dx = grid[dxvar].squeeze()
 else:
   sys.exit('dxvar missing from input file')
 
 if dyvar in grid:
-  dy = grid[dyvar]
+  dy = grid[dyvar].squeeze()
 else:
   sys.exit('dyvar missing from input file')
 
@@ -69,7 +70,7 @@ lstmasks = maskdataset.data_vars
 # Check that all masks are bi-dimensional with the same x and y dimensions
 ref_dims = None
 for sea in lstmasks:
-  mask = maskdataset[sea]
+  mask = maskdataset[sea].squeeze()
   if mask.ndim != 2:
     sys.exit("Mask " + sea + " is not bi-dimensional")
   if ref_dims is None:
@@ -89,16 +90,23 @@ if len(dims_to_reduce) != 2:
   sys.exit("Field and masks do not share two common dimensions")
 
 # Define output dataset containing average over each sea
+# coords_to_keep = {coord_name: field[coord_name] for coord_name in field.coords if coord_name not in dims_to_reduce}
+# This line does not seem to work - to sort out
 outdataset = xr.Dataset(attrs=dict(description = 'Average of variable ' + variable + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = datafile, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
 
 # Compute the area-averaged variable over each sea
 area=dx*dy
 for sea in lstmasks:
-  mask = maskdataset[sea]
+  mask = maskdataset[sea].squeeze()
+  plt.figure()
+  mask.plot()
   # Apply mask
   masked_field = field.where(mask == 1)
+  plt.figure()
+  masked_field.plot()
   # Compute the average over the dimensions common between field and mask
-  outdataset[sea]= masked_field.weighted(area).mean(dim=dims_to_reduce, skipna=skip_na).assign_attrs(dict(sea_name = mask.long_name))
+  outdataset[sea]= masked_field.weighted(area).mean(dim=dims_to_reduce, skipna=True).assign_attrs(dict(sea_name = mask.long_name))
+  plt.show()
 
 # Write the output netcdf file
 outdataset.to_netcdf(outfile)
