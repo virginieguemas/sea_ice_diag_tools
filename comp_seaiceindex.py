@@ -9,6 +9,7 @@ import os
 import datetime
 import getpass
 import argparse
+import warnings
 import matplotlib.pyplot as plt
 
 # Input arguments
@@ -102,6 +103,10 @@ for sea in lstmasks:
   mask.plot()
   # Apply mask
   masked_field = field.where(mask == 1)
+  # Check that field has no missing values within the sea (mask == 1)
+  missing_in_sea = (mask == 1) & field.isnull()
+  if missing_in_sea.any():
+    warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
   plt.figure()
   masked_field.plot()
   # Compute the average over the dimensions common between field and mask
