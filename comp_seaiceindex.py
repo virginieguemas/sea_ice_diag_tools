@@ -89,6 +89,9 @@ dims_to_reduce = [dim for dim in ref_dims if dim in field.dims]
 if len(dims_to_reduce) != 2:
   sys.exit("Field and masks do not share two common dimensions")
 
+# Identify the other dimensions of field (e.g. time, depth)
+extra_dims = [dim for dim in field.dims if dim not in dims_to_reduce]
+
 # Define output dataset containing average over each sea
 # coords_to_keep = {coord_name: field[coord_name] for coord_name in field.coords if coord_name not in dims_to_reduce}
 # This line does not seem to work - to sort out
@@ -106,6 +109,11 @@ for sea in lstmasks:
     warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
   # Compute the average over the dimensions common between field and mask
   outdataset[sea]= masked_field.weighted(area).mean(dim=dims_to_reduce, skipna=True).assign_attrs(dict(sea_name = mask.long_name))
+
+# Copy the attributes of the time and depth dimensions from the input data file
+for dim in extra_dims:
+  if dim in outdataset.coords and dim in field.coords:
+    outdataset[dim].attrs = dict(field.coords[dim].attrs)
 
 # Write the output netcdf file
 outdataset.to_netcdf(outfile)
