@@ -10,7 +10,6 @@ import datetime
 import getpass
 import argparse
 import warnings
-import matplotlib.pyplot as plt
 
 # Input arguments
 parser = argparse.ArgumentParser(description='Area-Averages a variable (2d/3d/4d) in each of the seas described into the mask file')
@@ -99,19 +98,14 @@ outdataset = xr.Dataset(attrs=dict(description = 'Average of variable ' + variab
 area=dx*dy
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
-  plt.figure()
-  mask.plot()
   # Apply mask
   masked_field = field.where(mask == 1)
   # Check that field has no missing values within the sea (mask == 1)
   missing_in_sea = (mask == 1) & field.isnull()
   if missing_in_sea.any():
     warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
-  plt.figure()
-  masked_field.plot()
   # Compute the average over the dimensions common between field and mask
   outdataset[sea]= masked_field.weighted(area).mean(dim=dims_to_reduce, skipna=True).assign_attrs(dict(sea_name = mask.long_name))
-  plt.show()
 
 # Write the output netcdf file
 outdataset.to_netcdf(outfile)
