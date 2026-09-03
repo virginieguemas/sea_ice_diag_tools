@@ -271,7 +271,7 @@ newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'
 #
 # 5n. Lincoln Sea (S-23 9.13)
 #  between northern Ellesmere Island and northern Greenland
-lincolns = xr.where((latitude > 82.35) & (latitude < 83.65) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
+lincolns = xr.where((latitude > 82.35) & (latitude < 83.63) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
 newmask['lincolns'] = xr.DataArray(lincolns, attrs=dict(long_name = 'Lincoln Sea'))
 #
 # 5o. Northwestern Passages (S-23 9.14)
@@ -287,7 +287,9 @@ newmask['beaufort'] = xr.DataArray(beaufort, attrs=dict(long_name = 'Beaufort Se
 #
 # 5q. Chukchi Sea (S-23 9.16)
 #  straddles the date line, between Ostrov Vrangelya and Point Barrow
-chukchis = xr.where((latitude > 66.18) & (latitude < 71.53) & ((longitude > 170.58) | (longitude < -156.47)), maskvar, 0)
+#  western limit follows Mys Yakan (177.5E) - Mys Blossom (178.75E), the common
+#  limit with the East Siberian Sea
+chukchis = xr.where((latitude > 66.18) & (latitude < 71.53) & ((longitude > 177.5) | (longitude < -156.47)), maskvar, 0)
 newmask['chukchis'] = xr.DataArray(chukchis, attrs=dict(long_name = 'Chukchi Sea'))
 
 
