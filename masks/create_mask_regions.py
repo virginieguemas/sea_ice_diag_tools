@@ -155,12 +155,18 @@ dumontdu = xr.where((latitude < -64) & (longitude > 136.20) & (longitude < 146.8
 newmask['dumontdu'] = xr.DataArray(dumontdu, attrs=dict(long_name = 'Dumont d\'Urville Sea'))
 #
 # 4l. Somov Sea
-# northern limit tilted from 64S on the west to 66S to the east, set to 65S
+# northern limit tilted from 64S on the west to 66.27S on the east (Cape Ellsworthy), set to 65S here
 somovsea = xr.where((latitude < -65) & (longitude > 146.83) & (longitude < 162.32), maskvar, 0)
-latlim = -65
-for xlon in np.arange(162.32,170.23):
-  latlim = latlim -0.7875
-  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1) ) & (longitude < 170.23) & (latitude > -72), 1, somovsea)
+# eastern limit follows two segments: Cape Ellsworthy (66.27S-162.32E) to Smith Point
+# (67.60S-164.82E), then Smith Point to Cape Adare (71.30S-170.23E, shared with the Ross Sea)
+somovsea = xr.where((latitude < -66.27) & (longitude > 162.32) & (longitude < 163.32), maskvar, somovsea)
+latlim = -66.27
+for xlon in np.arange(163.32,164.82):
+  latlim = latlim -0.665
+  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)) & (longitude < 164.82), maskvar, somovsea)
+for xlon in np.arange(164.82,170.23):
+  latlim = latlim -0.6167
+  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)) & (longitude < 170.23) & (latitude > -72), maskvar, somovsea)
 newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea'))
 
 # 4m Drake Passage
