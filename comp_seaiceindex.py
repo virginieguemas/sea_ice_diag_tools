@@ -1,5 +1,6 @@
-# This script computes the area-average of a variable in each of the seas      #
-# described into a mask file. The input variable can be 2d/3d/4d.              #
+# This script computes the area-average or the area-integral of a variable in  #
+# each of the seas described in a mask file. The input variable can be         # 
+# 2d/3d/4d.                                                                    #
 #                                                                              #
 # History : 2026 - initial version by Virginie Guemas                          #
 ################################################################################
@@ -12,7 +13,7 @@ import argparse
 import warnings
 
 # Input arguments
-parser = argparse.ArgumentParser(description='Area-Averages a variable (2d/3d/4d) in each of the seas described into the mask file')
+parser = argparse.ArgumentParser(description='Area-Averages or area-integrates a variable (2d/3d/4d) in each of the seas described into the mask file')
 parser.add_argument('--data', type=str, required=True, help='Path to the input data netcdf file')
 parser.add_argument('--var', type=str, required=True, help='Name of the variable to average')
 parser.add_argument('--mask', type=str, default="/home/guemas/tmp/test_regions/mask.ArcticSeas.cnrmcm7.nc", help='Path to the mask netcdf file (containing various sea masks (1/0)')
@@ -20,17 +21,17 @@ parser.add_argument('--grid', type=str, default="/home/guemas/mytools/cnrmcm7/ma
 parser.add_argument('--dxvar', type=str, default="e1t", help='Name of the variable containing the length of grid cells along x dimension (in m)')
 parser.add_argument('--dyvar', type=str, default="e2t", help='Name of the variable containing the length of grid cells along y dimension (in m)')
 parser.add_argument('--out', type=str, default="sia_per_sea.nc", help='Path to the output netcdf file')
-parser.add_argument('--NA', type=str, default=False, help='Skip NA (True/False)')
+parser.add_argument('--meanORsum', type=str, default="sum", help='mean for an area-average / sum for an integration (default : sum)')
 args = parser.parse_args()
 
-datafile = args.data
-variable = args.var
-maskfile = args.mask
-gridfile = args.grid
-dxvar    = args.dxvar
-dyvar    = args.dyvar
-outfile  = args.out
-skip_na  = args.NA
+datafile  = args.data
+variable  = args.var
+maskfile  = args.mask
+gridfile  = args.grid
+dxvar     = args.dxvar
+dyvar     = args.dyvar
+outfile   = args.out
+meanORsum = args.meanORsum
 
 # Open input files
 if os.path.exists(datafile):
@@ -92,13 +93,23 @@ if len(dims_to_reduce) != 2:
 # Identify the other dimensions of field (e.g. time, depth)
 extra_dims = [dim for dim in field.dims if dim not in dims_to_reduce]
 
-# Define output dataset containing average over each sea
+# Define output dataset containing the average over each sea
 # coords_to_keep = {coord_name: field[coord_name] for coord_name in field.coords if coord_name not in dims_to_reduce}
 # This line does not seem to work - to sort out
-outdataset = xr.Dataset(attrs=dict(description = 'Average of variable ' + variable + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = datafile, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
+outdataset = xr.Dataset(attrs=dict(description = 'Area-average of variable ' + variable + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = datafile, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
+
+# Define the operation to be applied
+area=dx*dy
+operation = {
+  'mean' : lambda readyfield: readyfield.weighted(area).mean(dim=dims_to_reduce, skipna=True),
+  'sum'  : lambda readyfield: readyfield.weighted(area).sum(dim=dims_to_reduce, skipna=True) 
+  }
+
+# Check meanORsum
+if meanORsum not in operation:
+  sys.exit(" meanOrsum must be either 'mean' or 'sum' ")
 
 # Compute the area-averaged variable over each sea
-area=dx*dy
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
@@ -107,8 +118,8 @@ for sea in lstmasks:
   missing_in_sea = (mask == 1) & field.isnull()
   if missing_in_sea.any():
     warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
-  # Compute the average over the dimensions common between field and mask
-  outdataset[sea]= masked_field.weighted(area).mean(dim=dims_to_reduce, skipna=True).assign_attrs(dict(sea_name = mask.long_name))
+  # Compute the average or the sum over the dimensions common between field and mask
+  outdataset[sea]= operation[meanORsum](masked_field).assign_attrs(dict(sea_name = mask.long_name))
 
 # Copy the attributes of the time and depth dimensions from the input data file
 for dim in extra_dims:
@@ -117,4 +128,4 @@ for dim in extra_dims:
 
 # Write the output netcdf file
 outdataset.to_netcdf(outfile)
-sys.exit()
+#sys.exit()
