@@ -13,7 +13,7 @@ import argparse
 import warnings
 
 # Input arguments
-parser = argparse.ArgumentParser(description='Area-Averages or area-integrates a variable (2d/3d/4d) in each of the seas described into the mask file')
+parser = argparse.ArgumentParser(description='Area-averages or area-integrates a variable (2d/3d/4d) in each of the seas described into the mask file')
 parser.add_argument('--data', type=str, required=True, help='Path to the input data netcdf file')
 parser.add_argument('--var', type=str, required=True, help='Name of the variable to average')
 parser.add_argument('--mask', type=str, default="/home/guemas/tmp/test_regions/mask.ArcticSeas.cnrmcm7.nc", help='Path to the mask netcdf file (containing various sea masks (1/0)')
@@ -21,7 +21,7 @@ parser.add_argument('--grid', type=str, default="/home/guemas/mytools/cnrmcm7/ma
 parser.add_argument('--dxvar', type=str, default="e1t", help='Name of the variable containing the length of grid cells along x dimension (in m)')
 parser.add_argument('--dyvar', type=str, default="e2t", help='Name of the variable containing the length of grid cells along y dimension (in m)')
 parser.add_argument('--out', type=str, default="sia_per_sea.nc", help='Path to the output netcdf file')
-parser.add_argument('--meanORsum', type=str, default="sum", help='mean for an area-average / sum for an integration (default : sum)')
+parser.add_argument('--meanORsum', type=str, default="sum", help='mean for an area-average / sum for an area-weighted sum (default : sum)')
 args = parser.parse_args()
 
 datafile  = args.data
@@ -93,10 +93,15 @@ if len(dims_to_reduce) != 2:
 # Identify the other dimensions of field (e.g. time, depth)
 extra_dims = [dim for dim in field.dims if dim not in dims_to_reduce]
 
-# Define output dataset containing the average over each sea
-# coords_to_keep = {coord_name: field[coord_name] for coord_name in field.coords if coord_name not in dims_to_reduce}
-# This line does not seem to work - to sort out
-outdataset = xr.Dataset(attrs=dict(description = 'Area-average of variable ' + variable + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = datafile, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
+# Define output dataset containing the average or the integral over each sea
+if meanORsum == 'mean':
+  outtitle = 'Area-average'
+elif meanORsum == 'sum':
+  outtitle = 'Area-integral'
+else:
+  sys.exit(" meanOrsum must be either 'mean' or 'sum' ")
+     
+outdataset = xr.Dataset(attrs=dict(description = outtitle + ' of variable ' + variable + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = datafile, creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
 
 # Define the operation to be applied
 area=dx*dy
@@ -105,11 +110,7 @@ operation = {
   'sum'  : lambda readyfield: readyfield.weighted(area).sum(dim=dims_to_reduce, skipna=True) 
   }
 
-# Check meanORsum
-if meanORsum not in operation:
-  sys.exit(" meanOrsum must be either 'mean' or 'sum' ")
-
-# Compute the area-averaged variable over each sea
+# Compute the area-averaged or area-integrated variable over each sea
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
