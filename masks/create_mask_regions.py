@@ -88,20 +88,21 @@ newmask['shemisph'] = xr.DataArray(shemisph, attrs=dict(long_name = 'Southern He
 antarct = xr.where(latitude < -60, maskvar, 0)
 newmask['antarcti'] = xr.DataArray(antarct, attrs=dict(long_name = 'Antarctic Ocean'))
 #
-# 4a. Ross Sea
-#  72S defined arbitrarily to follow the western coastline
-#  165.3E changed to 163 to follow the ORCA1 coastline which advances further into the land than reality
-rossseax = xr.where(((latitude < -71.30) & ((longitude > 170.23) | (longitude < -157.83))) | ((longitude > 163) & (longitude < 170.23) & (latitude < -72)), maskvar, 0)
+# 4a. Ross Sea (S-23 10.10)
+# 72S defined arbitrarily to follow the western coastline
+# 165.3E changed to 163 to follow the ORCA1 coastline which advances further into the land than reality
+rossseax = xr.where(((latitude < -71.30) & ((longitude > 170.23) | (longitude < -157.83))) | ((longitude > 162) & (longitude < 170.23) & (latitude < -72)), maskvar, 0)
 newmask['rossseax'] = xr.DataArray(rossseax, attrs=dict(long_name = 'Ross Sea'))
 #
-# 4b. Amundsen Sea
-amundsen = xr.where((latitude < -72.10) & (longitude > -126.25) & (longitude < -102.47), maskvar, 0)
+# 4b. Amundsen Sea (S-23 10.11)
+# Eastern limit shifted eastward to follow the ORCA1 coast -102.47 -> -102.25
+amundsen = xr.where((latitude < -72.10) & (longitude > -126.25) & (longitude < -102.25), maskvar, 0)
 newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Sea'))
 #
-# 4c. Bellingshausen Sea
+# 4c. Bellingshausen Sea (S-23 10.12)
+# Western limit shifted eastward as for the Amundsen sea
 # northern limit tilted northeastward between Cape Flying Fish and Peter I island represented with staircase here
-# slightly tilted southeastward between Peter I island and Adelaide Island set to 66.63S here
-bellings = xr.where(((latitude < -72.10) & (longitude > -102.47) & (longitude < -90.62)), maskvar, 0)
+bellings = xr.where(((latitude < -72.10) & (longitude > -102.25) & (longitude < -90.62)), maskvar, 0)
 latlim = -72.10
 for xlon in np.arange(-101.47,-90.62):
   latlim = latlim +0.307
@@ -112,7 +113,7 @@ for xlon in np.arange(-90.62,-67.80,2):
 
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 #
-# 4d. Weddell Sea
+# 4d. Weddell Sea (S-23 10.1)
 #  northern limit tilted close to 60S and set to 60S here
 #  eastern limit tilted westward with its southernmost point at 12.27W, set to 12.27W here
 #  western limit follows coastline near 60W until the tip of the Antartic Peninsula where it goes north
@@ -121,32 +122,32 @@ newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshau
 weddells = xr.where(((latitude < -60) & (longitude > -57) & (longitude < -12.27)) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
-# 4e. Lazarev Sea
+# 4e. Lazarev Sea (S-23 10.2)
 lazarevs = xr.where((latitude < -65) & (longitude > 0) & (longitude < 14), maskvar, 0)
 newmask['lazarevs'] = xr.DataArray(lazarevs, attrs=dict(long_name = 'Lazarev Sea'))
 #
-# 4f. Riiser-Larsen Sea
+# 4f. Riiser-Larsen Sea (S-23 10.3)
 riiserla = xr.where((latitude < -65) & (longitude > 14) & (longitude < 33.75), maskvar, 0)
 newmask['riiserla'] = xr.DataArray(riiserla, attrs=dict(long_name = 'Riiser-Larsen Sea'))
 #
-# 4g. Cosmonauts Sea
+# 4g. Cosmonauts Sea (S-23 10.4)
 cosmauno = xr.where((latitude < -65) & (longitude > 33.75) & (longitude < 53.80), maskvar, 0)
 newmask['cosmonau'] = xr.DataArray(cosmauno, attrs=dict(long_name = 'Cosmonauts Sea'))
 #
-# 4h. Cooperation Sea
+# 4h. Cooperation Sea (S-23 10.5)
 cooperat = xr.where((latitude < -65) & (longitude > 53.80) & (longitude < 81.67), maskvar, 0)
 newmask['cooperat'] = xr.DataArray(cooperat, attrs=dict(long_name = 'Cooperation Sea'))
 #
-# 4i. Davis Sea
+# 4i. Davis Sea (S-23 10.6)
 #  northern limit tilted from 65S on the west to 64S on the east, set to 65S
 davissea = xr.where((latitude < -65) & (longitude > 81.67) & (longitude < 95.58), maskvar, 0)
 newmask['davissea'] = xr.DataArray(davissea, attrs=dict(long_name = 'Davis Sea'))
 #
-# 4ibis. Tryoshnikova Gulf
+# 4ibis. Tryoshnikova Gulf (S-23 10.6.1)
 tryoshni = xr.where((latitude < -65) & (longitude > 88.02) & (longitude < 95.58), maskvar, 0)
 newmask['tryoshni'] = xr.DataArray(tryoshni, attrs=dict(long_name = 'Tryoshnikova Gulf'))
 #
-# 4j. Mawson sea
+# 4j. Mawson sea (S-23 10.7)
 mawsonse = xr.where((latitude < -64) & (longitude > 95.58) & (longitude < 113.20), maskvar, 0)
 newmask['mawsonse'] = xr.DataArray(mawsonse, attrs=dict(long_name = 'Mawson Sea'))
 #
@@ -204,10 +205,6 @@ newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait
 newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
 
 # 5b-5q. Arctic Ocean sub-divisions, based on
-#    IHO S-23, Draft 2002, Chapter 9 - Arctic Ocean and its sub-divisions
-# Boundaries below are simplified (straight lines / a small number of
-# latitude-longitude boxes) approximations of the official turning points
-# given in the chapter, adapted where needed to the ORCA1 coastline.
 #
 # 5b. East Siberian Sea (S-23 9.1)
 #  between Novosibirskiye Ostrova and Ostrov Vrangelya
