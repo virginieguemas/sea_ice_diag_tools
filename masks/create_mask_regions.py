@@ -238,9 +238,7 @@ nwpbeau_lat = [70.58, 71.97, 74.35, 76.10, 76.33]
 nwpbeau_lon = [-128.03, -126.02, -124.77, -123.01, -122.58]
 #
 # 5b. East Siberian Sea (S-23 9.1)
-#  between Novosibirskiye Ostrova and Ostrov Vrangelya
-#  northern shelf-edge limit follows the exact line from 79N-139E to 76N-180E
-eastsibe = xr.where((longitude > 139) & (longitude < 180) & (latitude > 69.58) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
+eastsibe = xr.where((longitude > 139) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 69.58) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
