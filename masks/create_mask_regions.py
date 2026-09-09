@@ -31,7 +31,7 @@ if grid == 'N3.2_O1L42':
    maskfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
    masktmp = xr.open_dataset(maskfile)
    msk_name = 'tmask'
-   maskvar = masktmp[msk_name].isel(t = 0,z = 0)
+   maskvar = masktmp[msk_name].isel(t = 0,z = 0).squeeze(drop=True)
 
    gridfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
    lon_name = 'nav_lon'
@@ -46,9 +46,9 @@ elif grid == 'cnrmcm7':
    msk_name  = 'tmaskutil'
    umsk_name = 'umaskutil'
    vmsk_name = 'vmaskutil'
-   maskvar   = masktmp[msk_name].squeeze()
-   umaskvar  = masktmp[umsk_name].squeeze()
-   vmaskvar  = masktmp[vmsk_name].squeeze()
+   maskvar   = masktmp[msk_name].squeeze(drop=True)
+   umaskvar  = masktmp[umsk_name].squeeze(drop=True)
+   vmaskvar  = masktmp[vmsk_name].squeeze(drop=True)
 
    gridfile = '/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc'
    lon_name = 'glamt'
@@ -61,8 +61,8 @@ else:
    sys.exit('unknown input grid')
 
 gridtmp = xr.open_dataset(gridfile)
-longitude = gridtmp[lon_name].squeeze()
-latitude = gridtmp[lat_name].squeeze()
+longitude = gridtmp[lon_name].squeeze(drop=True)
+latitude = gridtmp[lat_name].squeeze(drop=True)
 
 if (latitude.shape != longitude.shape):
     sys.exit('Latitudes, longitudes and mask don\'t have the same dimensions')
