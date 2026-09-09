@@ -275,28 +275,27 @@ icelands = xr.where((latitude > np.interp(longitude, [-14.97, -6.25], [64.23, 62
 newmask['icelands'] = xr.DataArray(icelands, attrs=dict(long_name = 'Iceland Sea'))
 #
 # 5j. Davis Strait (S-23 9.9)
-#  between Baffin Island and Greenland
-davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > -67.17) & (longitude < -44.83), maskvar, 0)
+ds_west_lat = [60.00, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88, 70.00]
+ds_west_lon = [-64.17, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97, -67.17]
+davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > np.interp(latitude, ds_west_lat, ds_west_lon)) & (longitude < -44.83), maskvar, 0)
 newmask['davisstr'] = xr.DataArray(davisstr, attrs=dict(long_name = 'Davis Strait'))
 #
 # 5k. Hudson Strait (S-23 9.10)
-#  east limit follows the chain from Cape Chidley to East Bluff Cape
-#  west limit follows the chain from Nuvuk Point to Lloyd Point, the common
-#  limit with the Hudson Bay then the Northwestern Passages
+hs_north_lon = [-78.03, -75., -65.97]
+hs_north_lat = [64.43, 65., 61.88]
+hs_south_lon = [-78.10, -76., -64.43, -64.43]
+hs_south_lat = [62.37,57., 57., 60.40]
 hs_east_lat = [60.40, 61.32, 61.63, 61.75, 61.78, 61.88]
 hs_east_lon = [-64.43, -64.78, -65.48, -65.67, -65.95, -65.97]
 hs_west_lat = [62.37, 63.45, 63.78, 64.43]
 hs_west_lon = [-78.10, -80.98, -80.15, -78.03]
-hudsonst = xr.where((latitude > 60.4) & (latitude < 64.43) & (longitude > np.interp(latitude, hs_west_lat, hs_west_lon)) & (longitude < np.interp(latitude, hs_east_lat, hs_east_lon)), maskvar, 0)
+hudsonst = xr.where((latitude > np.interp(longitude, hs_south_lon, hs_south_lat)) & (latitude < np.interp(longitude, hs_north_lon, hs_north_lat)) & (longitude > np.interp(latitude, hs_west_lat, hs_west_lon)) & (longitude < np.interp(latitude, hs_east_lat, hs_east_lon)), maskvar, 0)
 newmask['hudsonst'] = xr.DataArray(hudsonst, attrs=dict(long_name = 'Hudson Strait'))
 #
 # 5l. Hudson Bay (S-23 9.11)
-#  Foxe Basin is excluded here, as S-23 attributes it to the Northwestern Passages
-#  north limit follows the chain from Beach Point to Nuvuk Point, the common
-#  limit with the Northwestern Passages then the Hudson Strait
 hb_north_lon = [-85.87, -85.53, -80.98, -78.10]
 hb_north_lat = [66.20, 65.92, 63.45, 62.37]
-hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_lon, hb_north_lat)) & (longitude > -95) & (longitude < -78.1), maskvar, 0)
+hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_lon, hb_north_lat)) & (longitude > -95) & (longitude < -76.), maskvar, 0)
 newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
 #
 # 5m. Baffin Bay (S-23 9.12)
@@ -938,3 +937,16 @@ for dom in dom_dict:
 #fout2.write(dom_image)
 fout.close()
 #fout2.close()
+# This script defines a mask for each individual sea and ocean based #
+# on their official definition found in                              #
+#    IHO PUBLICATION S-23, Limits of Oceans and Seas,                #
+#       Draft 4th Edition, 2002                                      #
+# Current link : 
+#       https://legacy.iho.int/mtg_docs/com_wg/S-23WG/S-23WG_Misc/Draft_2002/Draft_2002.htm
+# except for some adaptation to account for the discretization of    # 
+# the coastline on the ORCA1 grid as indicated in the comments.      #
+#                                                                    #
+# History : 2025 - initial version by Virginie Guemas                #
+######################################################################
+import sys
+import xarray as xr
