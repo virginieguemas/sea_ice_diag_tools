@@ -178,11 +178,28 @@ newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea')
 
 # To be filled here
 
-# 5. Arctic Ocean
-#bool_arctic_1 = np.greater(marg,nhemisph)
-#bool_arctic = np.logical_and(bool_arctic_1,latitude>0)
-#arcticoc = xr.where(np.logical_or(bool_arctic,bool_centrarc),maskvar,0)
-#newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
+# 5. Arctic Ocean (S-23 9, opening definition)
+#  southern limit, from Norway eastward along the Atlantic side to Labrador:
+#  Norway (60.85N-4.67E) - Muckle Flugga (60.85N-0.88W) - Fugloy (62.35N-6.25W)
+#  - Stokksnes (64.23N-14.97W) - [Iceland coast] - Bjargtangar (65.5N-24.53W)
+#  - Kap Edward Holm (67.85N-32.18W) - [Greenland coast] - Greenland SW coast
+#  (60N-44.83W) - along the 60N parallel to Labrador (60N-64.17W)
+arc_atl_lon = [-64.17, -44.83, -32.18, -24.53, -14.97, -6.25, -0.88, 4.67]
+arc_atl_lat = [60.0, 60.0, 67.85, 65.5, 64.23, 62.35, 60.85, 60.85]
+#  from Labrador westward along the northern mainland coast of North America
+#  to Seward Peninsula (66.18N-164.23W), then a line to Poluostrov Chukotskiy
+#  (66.37N-170.58W, the common limit with the North Pacific Ocean)
+arc_ame_lon = [-170.58, -164.23, -64.17]
+arc_ame_lat = [66.37, 66.18, 60.0]
+#  from Chukotskiy westward along the coasts of Russia and Norway back to
+#  Norway's southwestern coast; this very long coastal stretch is simplified
+#  here as a single line between its two named endpoints, as elsewhere in
+#  this file (the land-sea mask does the detailed work along the coast)
+arc_rus_lon = [4.67, 180.0]
+arc_rus_lat = [60.85, 66.37]
+arc_south_lim = xr.where(longitude > 4.67, np.interp(longitude, arc_rus_lon, arc_rus_lat), xr.where(longitude > -64.17, np.interp(longitude, arc_atl_lon, arc_atl_lat), np.interp(longitude, arc_ame_lon, arc_ame_lat)))
+arcticoc = xr.where(latitude > arc_south_lim, maskvar, 0)
+newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
 #
 # 5a. Fram Strait
 #
