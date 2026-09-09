@@ -206,15 +206,12 @@ newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait
 
 # 5b-5q. Arctic Ocean sub-divisions, based on
 #
-# Shared boundary chains, following the exact S-23 turning points (deg+min/60
-# converted to decimal). Each oblique limit below is evaluated with np.interp,
-# which gives the boundary latitude/longitude at the exact coordinate of every
-# grid point -- i.e. the finest possible staircase on the model grid, instead
-# of a handful of flat latitude/longitude bands.
-#
 # Laptev Sea / Kara Sea, following the Severnaya Zemlya archipelago (S-23 9.2 West / 9.3 East)
-sevzem_lat = [77.53, 78.30, 79.42, 79.67, 80.17, 80.22, 81.27]
-sevzem_lon = [105.92, 104.83, 102.42, 100.33, 97.67, 97.33, 95.75]
+#sevzem_lat = [77.53, 78.30, 79.42, 79.67, 80.17, 80.22, 81.27]
+#sevzem_lon = [105.92, 104.83, 102.42, 100.33, 97.67, 97.33, 95.75]
+# Adaptation for ORCA1 NEMO4.2.3
+sevzem_lat = [77.53, 78.30, 79.42, 79.60, 80.17, 80.22, 81.27]
+sevzem_lon = [105.92, 104.83, 102.42, 100.25, 97.67, 97.33, 95.75]
 #
 # Kara Sea / Barents Sea, following the Novaya Zemlya archipelago (S-23 9.3 West / 9.4 East)
 novzem_lat = [69.60, 69.67, 70.25, 70.47, 73.28, 73.35, 76.95, 81.00]
@@ -242,45 +239,28 @@ eastsibe = xr.where((longitude > 139) & (longitude < np.interp(latitude, [69.58,
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
-#  eastern limit shared with the East Siberian Sea at 139E
-#  northern limit follows the exact line from Mys Arktichesky (81.27N-95.75E) to the shelf edge (79N-139E)
-#  western limit follows the Severnaya Zemlya archipelago, the common limit with the Kara Sea
 laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < 139), maskvar, 0)
 newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
 #
 # 5d. Kara Sea (S-23 9.3)
-#  northern limit follows the exact line from Mys Kol'zat (81.00N-65.33E) to Mys Arkticheskiy (81.27N-95.75E)
-#  eastern limit follows the Severnaya Zemlya archipelago, the common limit with the Laptev Sea
-#  western limit follows the Novaya Zemlya archipelago, the common limit with the Barents Sea
 karaseax = xr.where((latitude > 69.6) & (latitude < np.interp(longitude, [65.33, 95.75], [81.0, 81.27])) & (longitude > np.interp(latitude, novzem_lat, novzem_lon)) & (longitude < np.interp(latitude, sevzem_lat, sevzem_lon)), maskvar, 0)
 newmask['karaseax'] = xr.DataArray(karaseax, attrs=dict(long_name = 'Kara Sea'))
 #
 # 5e. Barents Sea (S-23 9.4)
-#  excludes the White Sea (see 5f)
-#  northern limit follows the exact chain along Svalbard and Zemlya Frantsa Iosifa
-#  western limit follows Norway, Bjornoya and Svalbard, the common limit with the Norwegian Sea
-#  eastern limit follows the Novaya Zemlya archipelago, the common limit with the Kara Sea
 barn_north_lon = [16.27, 17.77, 26.83, 28.00, 32.67, 36.75, 44.92, 65.33]
 barn_north_lat = [80.07, 80.13, 80.17, 80.13, 80.17, 80.17, 80.60, 81.00]
 barentse = xr.where((latitude > 68.1) & (latitude < np.interp(longitude, barn_north_lon, barn_north_lat)) & (longitude > np.interp(latitude, barnor_lat, barnor_lon)) & (longitude < np.interp(latitude, novzem_lat, novzem_lon)), maskvar, 0)
 newmask['barentse'] = xr.DataArray(barentse, attrs=dict(long_name = 'Barents Sea'))
 #
 # 5f. White Sea (S-23 9.5)
-#  gulf south of the Barents Sea; common limit at 68.1N (Mys Svyatoy Nos to Mys Kanin Nos)
 whitesea = xr.where((latitude > 63) & (latitude < 68.1) & (longitude > 33) & (longitude < 45), maskvar, 0)
 newmask['whitesea'] = xr.DataArray(whitesea, attrs=dict(long_name = 'White Sea'))
 #
 # 5g. Greenland Sea (S-23 9.6)
-#  northern limit follows the exact line from Kap Bridgman (83.38N-25.42W) to Verlegenhuken (80.07N-16.27E)
-#  east/southeast/south limit follows Svalbard and Jan Mayen, the common limit with the Norwegian Sea
-greenlds = xr.where((latitude > 70.15) & (latitude < np.interp(longitude, [-25.42, 16.27], [83.38, 80.07])) & (longitude < np.interp(latitude, greennor_lat, greennor_lon)), maskvar, 0)
+greenlds = xr.where((latitude > 70.15) & (latitude < np.interp(longitude, [-25.42, 16.27], [83.38, 80.07])) & (longitude > -40) & (longitude < np.interp(latitude, greennor_lat, greennor_lon)), maskvar, 0)
 newmask['greenlds'] = xr.DataArray(greenlds, attrs=dict(long_name = 'Greenland Sea'))
 #
 # 5h. Norwegian Sea (S-23 9.7)
-#  north limit follows Jan Mayen, Svalbard, Bjornoya and Norway (common limit
-#  with the Greenland Sea then the Barents Sea)
-#  south limit follows the 61N parallel then a line to Fugloy
-#  west limit follows the common limit with the Iceland Sea
 norw_north_lon = [-9.00, -7.97, 16.62, 19.10, 25.78]
 norw_north_lat = [70.83, 71.17, 76.47, 74.43, 71.17]
 norw_south_lon = [-6.25, -0.88, 4.67]
@@ -289,10 +269,6 @@ norwegia = xr.where((latitude > np.interp(longitude, norw_south_lon, norw_south_
 newmask['norwegia'] = xr.DataArray(norwegia, attrs=dict(long_name = 'Norwegian Sea'))
 #
 # 5i. Iceland Sea (S-23 9.8)
-#  north limit follows the line from Kap Brewster to Sorkapp (Jan Mayen)
-#  east limit follows the common limit with the Norwegian Sea
-#  south limit follows the line from Fugloy to Stokksnes
-#  west limit follows the Iceland coast then the Denmark Strait to Kap Brewster
 icel_west_lat = [65.50, 67.85, 70.15]
 icel_west_lon = [-24.53, -32.18, -22.07]
 icelands = xr.where((latitude > np.interp(longitude, [-14.97, -6.25], [64.23, 62.35])) & (latitude < np.interp(longitude, [-22.07, -9.00], [70.15, 70.83])) & (longitude < np.interp(latitude, norice_lat, norice_lon)) & (longitude > np.interp(latitude, icel_west_lat, icel_west_lon)), maskvar, 0)
