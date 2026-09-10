@@ -287,12 +287,12 @@ davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > np.interp(l
 newmask['davisstr'] = xr.DataArray(davisstr, attrs=dict(long_name = 'Davis Strait'))
 #
 # 5k. Hudson Strait (S-23 9.10)
-hs_north_lon = [-78.03, -75., -65.97]
-hs_north_lat = [64.43, 65., 61.88]
-hs_south_lon = [-78.10, -76., -64.43, -64.43]
-hs_south_lat = [62.37,57., 57., 60.40]
-hs_east_lat = [60.40, 61.32, 61.63, 61.75, 61.78, 61.88]
-hs_east_lon = [-64.43, -64.78, -65.48, -65.67, -65.95, -65.97]
+hs_north_lon = [-80.98, -78.03, -75., -65.97, -64.78]
+hs_north_lat = [63.45, 64.43, 65., 61.88, 61.32]
+hs_south_lon = [-80.98, -78.10, -76., -64.43, -64.43]
+hs_south_lat = [63.45, 62.37, 57., 57., 60.40]
+hs_east_lat = [57.5, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88]
+hs_east_lon = [-64.43, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97]
 hs_west_lat = [62.37, 63.45, 63.78, 64.43]
 hs_west_lon = [-78.10, -80.98, -80.15, -78.03]
 hudsonst = xr.where((latitude > np.interp(longitude, hs_south_lon, hs_south_lat)) & (latitude < np.interp(longitude, hs_north_lon, hs_north_lat)) & (longitude > np.interp(latitude, hs_west_lat, hs_west_lon)) & (longitude < np.interp(latitude, hs_east_lat, hs_east_lon)), maskvar, 0)
@@ -305,8 +305,7 @@ hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_
 newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
 #
 # 5m. Baffin Bay (S-23 9.12)
-#  between Ellesmere/Devon/Bylot/Baffin Islands and western Greenland
-baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > -80.23) & (longitude < -51.75), maskvar, 0)
+baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > -80.23) & (longitude < np.interp(latitude, [70., 80., 80., 82.47],[-51.75, -51.75, 82.47, 82.47]), maskvar, 0)
 newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
 #
 # 5n. Lincoln Sea (S-23 9.13)
@@ -377,57 +376,6 @@ bool_natl = np.logical_and(bool_natl,np.logical_not(bool_medit))
 northatl = np.where(bool_natl,maskvar,0)
 dom_dict['North Atlantic Ocean'] = northatl
 #
-#Greenland Sea
-bool_green_1 = np.logical_and(np.logical_and(latitude > 76,latitude < 81), np.logical_and(longitude>-30, longitude <17))
-bool_green_2 = np.logical_and(np.logical_and(latitude > 75,latitude < 76), np.logical_and(longitude>-30, longitude <12))
-bool_green_3 = np.logical_and(np.logical_and(latitude > 74,latitude < 75), np.logical_and(longitude>-30, longitude <9))
-bool_green_4 = np.logical_and(np.logical_and(latitude > 73,latitude < 74), np.logical_and(longitude>-30, longitude <4))
-bool_green_5 = np.logical_and(np.logical_and(latitude > 72,latitude < 73), np.logical_and(longitude>-30, longitude <0))
-bool_green_6 = np.logical_and(np.logical_and(latitude > 71,latitude < 72), np.logical_and(longitude>-30, longitude <-3))
-bool_green_7 = np.logical_and(np.logical_and(latitude > 70,latitude < 71), np.logical_and(longitude>-30, longitude <-8))
-bool_green = bool_green_1
-for i in range(2,8):
- exec('bool_green = np.logical_or(bool_green,bool_green_'+ str(i) +')')
-
-#
-greenlan = np.where(bool_green,maskvar,0)
-dom_dict['Greenland Sea'] = greenlan
-#
-#Icelandic Sea: N->S, Jan Mayen is SE corner
-bool_icel_1 = np.logical_and(np.logical_and(latitude > 69,latitude < 70), np.logical_and(longitude>-29, longitude <-9))
-bool_icel_2 = np.logical_and(np.logical_and(latitude > 68,latitude < 69), np.logical_and(longitude>-28, longitude <-10))
-bool_icel_3 = np.logical_and(np.logical_and(latitude > 67,latitude < 68), np.logical_and(longitude>-25, longitude <-11))
-bool_icel_4 = np.logical_and(np.logical_and(latitude > 66,latitude < 67), np.logical_and(longitude>-23, longitude <-12))
-bool_icel_5 = np.logical_and(np.logical_and(latitude > 65,latitude < 66), np.logical_and(longitude>-20, longitude <-13))
-bool_icel = bool_icel_1 
-for i in range(2,6):
- exec('bool_icel=np.logical_or(bool_icel,bool_icel_'+ str(i) +')')
-
-icelands = np.where(bool_icel,maskvar,0)
-dom_dict['Icelandic Sea'] = icelands
-#
-#Norwegian Sea: N->S, Bjornoya is E corner, then North Cape
-bool_norw_1 = np.logical_and(np.logical_and(latitude > 75,latitude < 76), np.logical_and(longitude>12, longitude <17))
-bool_norw_2 = np.logical_and(np.logical_and(latitude > 74,latitude < 75), np.logical_and(longitude>9, longitude <18))
-bool_norw_3 = np.logical_and(np.logical_and(latitude > 73,latitude < 74), np.logical_and(longitude>4, longitude <19))
-#I reached Bjornoya
-bool_norw_4 = np.logical_and(np.logical_and(latitude > 72,latitude < 73), np.logical_and(longitude>0, longitude <21))
-bool_norw_5 = np.logical_and(np.logical_and(latitude > 71,latitude < 72), np.logical_and(longitude>-3, longitude <23))
-bool_norw_6 = np.logical_and(np.logical_and(latitude > 70,latitude < 71), np.logical_and(longitude>-8, longitude <25))
-#I reached North Cape
-bool_norw_7 = np.logical_and(np.logical_and(latitude > 66,latitude < 70), np.logical_and(longitude>-13, longitude <25))
-bool_norw_7 = np.logical_and(bool_norw_7, np.logical_not(bool_icel))
-bool_norw_8 = np.logical_and(np.logical_and(latitude > 62,latitude < 66), np.logical_and(longitude>-6, longitude <15))
-bool_norw_9 = np.logical_and(np.logical_and(latitude > 61,latitude < 62), np.logical_and(longitude>0, longitude <15))
-bool_norw_10 = np.logical_and(np.logical_and(latitude > 63,latitude < 64), np.logical_and(longitude>-8, longitude <-6))
-bool_norw_11 = np.logical_and(np.logical_and(latitude > 64,latitude < 65), np.logical_and(longitude>-10, longitude <-6))
-bool_norw_12 = np.logical_and(np.logical_and(latitude > 65,latitude < 66), np.logical_and(longitude>-13, longitude <-6))
-bool_norw = bool_norw_1
-for i in range(2,13):
- exec('bool_norw=np.logical_or(bool_norw,bool_norw_'+ str(i) +')')
-
-norskhav = np.where(bool_norw,maskvar,0)
-dom_dict['Norwegian Sea'] = norskhav
 #
 #GIN seas: simple one!!!
 bool_gins = np.logical_or(np.logical_or(bool_green,bool_icel),bool_norw)
@@ -437,97 +385,6 @@ dom_dict['Grnland']=ginseasx
 dom_arct['GINSEASX'] = ginseasx
 #
 #
-#Barents Sea (including White Sea)
-#E limit of Greenland Sea -> FJL -> Cape Zhelanya
-bool_barnts_1 = np.logical_and(np.logical_and(latitude > 76,latitude < 80), np.logical_and(longitude>17, longitude <65))
-#E limit of Norwegian Sea -> Novaya Zemlya
-bool_barnts_2 = np.logical_and(np.logical_and(latitude > 75,latitude < 76), np.logical_and(longitude>17, longitude <62))
-bool_barnts_3 = np.logical_and(np.logical_and(latitude > 74,latitude < 75), np.logical_and(longitude>18, longitude <59))
-bool_barnts_4 = np.logical_and(np.logical_and(latitude > 73,latitude < 74), np.logical_and(longitude>19, longitude <58))
-bool_barnts_5 = np.logical_and(np.logical_and(latitude > 72,latitude < 73), np.logical_and(longitude>21, longitude <56))
-bool_barnts_6 = np.logical_and(np.logical_and(latitude > 71,latitude < 72), np.logical_and(longitude>23, longitude <56))
-bool_barnts_7 = np.logical_and(np.logical_and(latitude > 70,latitude < 71), np.logical_and(longitude>25, longitude <57))
-#I reached North Cape and Kara Gate Strait
-bool_barnts_8 = np.logical_and(np.logical_and(latitude > 66,latitude < 70), np.logical_and(longitude>25, longitude <60))
-#I fill the White Sea
-bool_barnts_9 = np.logical_and(np.logical_and(latitude > 63,latitude < 66), np.logical_and(longitude>30, longitude <45))
-bool_barnts = bool_barnts_1
-for i in range(2,10):
- exec('bool_barnts=np.logical_or(bool_barnts,bool_barnts_'+ str(i) +')')
-
-barentsx = np.where(bool_barnts, maskvar, 0)
-dom_dict['Barents Sea'] = barentsx
-dom_arct['BARENTSX'] = barentsx
-#
-#
-#Kara Sea
-#Northern part: FJL - Svernya Zemlya - Cape Chelyuskin - Cape Zhelanya
-bool_kara_1 = np.logical_and(np.logical_and(latitude > 79,latitude < 80), np.logical_and(longitude>65, longitude <96))
-bool_kara_2 = np.logical_and(np.logical_and(latitude > 76,latitude <= 79), np.logical_and(longitude>65, longitude <105))
-#I fill southwestern part of the sea
-bool_kara_3 = np.logical_and(np.logical_and(latitude > 75,latitude < 76), np.logical_and(longitude>62, longitude <100))
-bool_kara_4 = np.logical_and(np.logical_and(latitude > 74,latitude < 75), np.logical_and(longitude>59, longitude <100))
-bool_kara_5 = np.logical_and(np.logical_and(latitude > 73,latitude < 74), np.logical_and(longitude>58, longitude <100))
-bool_kara_6 = np.logical_and(np.logical_and(latitude > 71,latitude < 73), np.logical_and(longitude>56, longitude <100))
-bool_kara_7 = np.logical_and(np.logical_and(latitude > 70,latitude < 71), np.logical_and(longitude>57, longitude <100))
-#I reached Kara Gate Strait and Yamal coast
-bool_kara_8 = np.logical_and(np.logical_and(latitude > 66,latitude < 70), np.logical_and(longitude>60, longitude <90))
-bool_kara = bool_kara_1
-for i in range(2,9):
- exec('bool_kara=np.logical_or(bool_kara,bool_kara_'+ str(i) +')')
-
-karaxxxx = np.where(bool_kara, maskvar, 0)
-dom_dict['Kara Sea'] = karaxxxx
-dom_arct['KARAXXXX'] = karaxxxx
-#
-#
-#Laptev Sea
-#
-bool_lapt_1 =  np.logical_and(np.logical_and(latitude > 80,latitude < 81), np.logical_and(longitude>96, longitude <102))
-bool_lapt_2 =  np.logical_and(np.logical_and(latitude > 79,latitude < 80), np.logical_and(longitude>100, longitude <111))
-bool_lapt_3 =  np.logical_and(np.logical_and(latitude > 78,latitude < 79), np.logical_and(longitude>105, longitude <120))
-bool_lapt_4 =  np.logical_and(np.logical_and(latitude > 77,latitude < 78), np.logical_and(longitude>105, longitude <129))
-bool_lapt_5 =  np.logical_and(np.logical_and(latitude > 76,latitude < 77), np.logical_and(longitude>100, longitude <138))
-#I reached Novaya Zemlya Archipelago: now cross Laptev Strait
-bool_lapt_6 =  np.logical_and(np.logical_and(latitude > 70,latitude < 76), np.logical_and(longitude>105, longitude <140))
-bool_lapt = bool_lapt_1
-for i in range(2,7):
- exec('bool_lapt=np.logical_or(bool_lapt,bool_lapt_'+ str(i) +')')
-
-laptevxx = np.where(bool_lapt, maskvar, 0)
-dom_dict['Laptev Sea'] = laptevxx
-dom_arct['LAPTEVXX'] = laptevxx
-#
-#
-#East Siberian Sea
-#
-bool_easib_1 = np.logical_and(np.logical_and(latitude > 74,latitude < 75), np.logical_and(longitude>140, longitude <146))
-bool_easib_2 = np.logical_and(np.logical_and(latitude > 73,latitude < 74), np.logical_and(longitude>140, longitude <154))
-bool_easib_3 = np.logical_and(np.logical_and(latitude > 72,latitude < 73), np.logical_and(longitude>140, longitude <162))
-bool_easib_4 = np.logical_and(np.logical_and(latitude > 71,latitude < 72), np.logical_and(longitude>140, longitude <170))
-bool_easib_5 = np.logical_and(np.logical_and(latitude > 70,latitude < 71), np.logical_and(longitude>140, longitude <179))
-#I reached Wrangel Island (and it is so beautiful)
-bool_easib_6 = np.logical_and(np.logical_and(latitude > 69,latitude < 70), np.logical_and(longitude>140, longitude <178))
-bool_easib_7 = np.logical_and(np.logical_and(latitude > 68,latitude < 69), np.logical_and(longitude>140, longitude <178))
-bool_easib = bool_easib_1
-for i in range(2,8):
- exec('bool_easib=np.logical_or(bool_easib,bool_easib_'+ str(i) +')')
-
-eastsibe = np.where(bool_easib,maskvar,0)
-dom_dict['East Siberian Sea'] = eastsibe
-dom_arct['EASTSIBE'] = eastsibe
-#
-#
-#Chukchi Sea
-#
-bool_chuk_1 = np.logical_and(np.logical_and(latitude > 66,latitude < 71), longitude <-156)
-bool_chuk_2 = np.logical_and(np.logical_and(latitude > 66,latitude < 71), longitude>179)
-bool_chuk_3 = np.logical_and(np.logical_and(latitude > 69,latitude < 70), longitude>178)
-bool_chuk = np.logical_or(bool_chuk_1,bool_chuk_2)
-bool_chuk = np.logical_or(bool_chuk,bool_chuk_3)
-chukchis = np.where(bool_chuk,maskvar,0)
-dom_dict['Chukchi Sea'] = chukchis
-dom_arct['CHUKCHIS'] = chukchis
 #
 #
 #Bering Sea
@@ -596,34 +453,8 @@ dom_dict['Beaufort Sea'] = beaufort
 dom_arct['BEAUFORT'] = beaufort
 #
 #
-#Baffin Bay (including Kennedy Passage and Davis Strait)
-#
-bool_baff_1 = np.logical_and(np.logical_and(latitude > 70,latitude < 81), np.logical_and(longitude>-84, longitude <-45))
-#Now, it is the official definition of Davis Strait...
-bool_baff_2 = np.logical_and(np.logical_and(latitude > 66,latitude < 70), np.logical_and(longitude>-70, longitude <-45))
-bool_baff_3 = np.logical_and(np.logical_and(latitude > 62,latitude < 66), np.logical_and(longitude>-66, longitude <-45))
-bool_baff_4 = np.logical_and(np.logical_and(latitude > 61,latitude < 62), np.logical_and(longitude>-65, longitude <-45))
-bool_baff = bool_baff_1
-for i in range(2,5):
- exec('bool_baff=np.logical_or(bool_baff,bool_baff_'+ str(i) +')')
-
-baffinxx = np.where(bool_baff,maskvar,0)
-dom_dict['Baffin Bay'] = baffinxx
-dom_arct['BAFFINXX'] = baffinxx
 #
 #
-#Hudson Bay (including Hudson Strait and Foxe Basin)
-#
-bool_huds_1 = np.logical_and(np.logical_and(latitude > 50,latitude < 67), np.logical_and(longitude>-95, longitude <-66))
-bool_huds_2 = np.logical_and(np.logical_and(latitude > 67,latitude < 70), np.logical_and(longitude>-85, longitude <-70))
-bool_huds_3 = np.logical_and(np.logical_and(latitude > 59,latitude < 62), np.logical_and(longitude>-66, longitude <-65))
-bool_huds = bool_huds_1
-for i in range(2,4):
- exec('bool_huds=np.logical_or(bool_huds,bool_huds_'+ str(i) +')')
-
-hudsonxx = np.where(bool_huds,maskvar,0)
-dom_dict['Hudson'] = hudsonxx
-dom_arct['HUDSONXX'] = hudsonxx
 #
 #
 #Labrador Sea
@@ -650,42 +481,7 @@ dom_dict['Labrador Sea'] = labrador
 dom_arct['LABRADOR'] = labrador
 #
 #
-#Northwest Passage
-#Southern part (passage Amundsen + official passage)
-bool_nwpa_1 = np.logical_and(np.logical_and(latitude > 73,latitude < 77), np.logical_and(longitude>-120, longitude <-84))
-bool_nwpa_2 = np.logical_and(np.logical_and(latitude > 67,latitude < 73), np.logical_and(longitude>-124, longitude <-85))
-#Northern part (Sverdrup Basin)
-bool_nwpa_3 = np.logical_and(np.logical_and(latitude > 76,latitude < 77), np.logical_and(longitude>-120, longitude <-84))
-bool_nwpa_4 = np.logical_and(np.logical_and(latitude > 77,latitude < 78), np.logical_and(longitude>-116, longitude <-84))
-bool_nwpa_5 = np.logical_and(np.logical_and(latitude > 78,latitude < 79), np.logical_and(longitude>-108, longitude <-84))
-bool_nwpa_6 = np.logical_and(np.logical_and(latitude > 79,latitude < 80), np.logical_and(longitude>-100, longitude <-84))
-bool_nwpa_7 = np.logical_and(np.logical_and(latitude > 80,latitude < 81), np.logical_and(longitude>-93, longitude <-84))
-bool_nwpa_8 = np.logical_and(np.logical_and(latitude > 81,latitude < 82), np.logical_and(longitude>-85, longitude <-84))
-bool_nwpa_9 = np.logical_and(np.logical_and(latitude > 82,latitude < 83), np.logical_and(longitude>-77, longitude <-75))
-#I reached Cape Columbia (Ellesmere Island): I can walk toward North Pole!!!
-bool_nwpa = bool_nwpa_1
-for i in range(2,10):
- exec('bool_nwpa=np.logical_or(bool_nwpa,bool_nwpa_'+ str(i) +')')
-
-nwestpas = np.where(bool_nwpa,maskvar,0)
-dom_dict['NorthWest Passage'] = nwestpas
-dom_dict['CanArch']=nwestpas
-dom_arct['NWESTPAS'] = nwestpas
-#x.clear()
-#x.plot(nhemisph + 2*hudsonxx+2*baffinxx + 2*labrador + 2*beaufort + nwestpas)
 #
-#
-#Lincoln Sea
-bool_linc_1 = np.logical_and(np.logical_and(latitude > 81,latitude < 84), np.logical_and(longitude>-60, longitude <-32))
-bool_linc_2 = np.logical_and(np.logical_and(latitude > 81,latitude < 83), np.logical_and(longitude>-70, longitude <-60))
-bool_linc = np.logical_or(bool_linc_1,bool_linc_2)
-
-lincolnx = np.where(bool_linc,maskvar,0)
-dom_dict['Lincoln Sea'] = lincolnx
-dom_arct['LINCOLNX'] = lincolnx
-#
-#
-#Irminger Sea
 
 #Marginal seas
 dict_marg = ['GINSEASX','BARENTSX','KARAXXXX','BAFFINXX','LAPTEVXX','HUDSONXX','EASTSIBE','BEAUFORT','NWESTPAS','CHUKCHIS','BERINGXX','OKHOTSKX']
@@ -750,20 +546,7 @@ caspianx = np.where(bool_casp,maskvar,0)
 dom_dict['Caspian Sea'] = caspianx
 #
 #
-#Northern Hemisphere oceanic seas
-nhemisptot = nhemisph + caspianx + baltseax
-bool_nohemi = np.equal(nhemisptot,nhemisph)
-nnhemisp=np.where(bool_nohemi,nhemisph,0)
-dom_dict['North Hemisphere Ocean'] = nnhemisp
-
-#ref_gridf = cdms.open('/data3/udc/chevalli/NEMO3.2_LIM/OCE04')
 #
-#MAIN STRAITS
-#
-#Fram Strait (Northernmost Greenland Sea)
-bool_fram= np.logical_and(np.logical_and(latitude > 80,latitude < 81), np.logical_and(longitude>-30, longitude <17))
-fram = np.where(bool_fram,maskvar,0)
-dom_dict['Fram Strait'] = fram
 #
 #
 #Bering Strait (Southernmost Chukchi Sea: in Chk Sea)
@@ -848,31 +631,6 @@ mipc=mpac+mind
 mipc[:170,70:73]=dom_dict['Global Ocean'][:170,70:73]
 dom_dict['Indo-Pacific Ocean']=mipc
 #
-# COMBINAISON DE REGION (PLUS PERTINENTE)
-#
-# Barents + Kara Seas
-#
-dom_dict['BarKara']=dom_dict['Barents Sea']+dom_dict['Kara Sea']
-#
-# East Sib + Laptev Seas
-#
-dom_dict['Laptev-East Siberian Seas']=dom_dict['East Siberian Sea']+dom_dict['Laptev Sea']
-#
-# Canadian Archipelago
-#
-dom_dict['Canadian Waters']=dom_dict['NorthWest Passage']+dom_dict['Baffin Bay']+dom_dict['Hudson']+dom_dict['Labrador Sea']
-#
-# Beaufort + Chukchi Seas
-# 
-dom_dict['Beaufort-Chukchi Sea']=dom_dict['Beaufort Sea']+dom_dict['Chukchi Sea']
-#
-# East Sib + Laptev + Chukchi Seas
-#
-dom_dict['Laptev-East Siberian-Chukchi Seas']=dom_dict['Laptev-East Siberian Seas']+dom_dict['Chukchi Sea']
-#
-# GIN + Barents Seas
-#
-dom_dict['Nordic-Barents Seas']=dom_dict['Nordic Seas']+dom_dict['Barents Sea']
 #
 # Mask Serreze
 boolarcticxx=dom_dict['Central Arctic']+dom_dict['Barents Sea']+\
@@ -922,37 +680,3 @@ arcnatl=natlarc+nsarcton+dom_dict['Kara Sea']
 dom_dict['Arctic Ocean-North Atlantic']=np.where(arcnatl>=1.,1.,0.)
 
 
-#
-fout = cdms.open('mask.ArcticSeas.'+version+'.nc','w')
-#fout2= cdms.open('Mask_NEMO_1_image.nc','w')
-i=1
-dom_image = maskvar
-
-for dom in dom_dict:
-	dom_var = cdms.createVariable(np.where(dom_dict[dom]>=1.,1.,0.))
-	dom_var.getAxisList()[0].designateLatitude()
-	dom_var.getAxisList()[1].designateLongitude()
-	dom_var.long_name = dom
-	dom_var.short_name = dom
-	dom_var.id = dom
-	fout.write(dom_var)
-#	i+=
-#for dom in dom_arct:
-#	dom_image = np.add(dom_image, i*dom_dict[dom])
-#	i = i+1
-#fout2.write(dom_image)
-fout.close()
-#fout2.close()
-# This script defines a mask for each individual sea and ocean based #
-# on their official definition found in                              #
-#    IHO PUBLICATION S-23, Limits of Oceans and Seas,                #
-#       Draft 4th Edition, 2002                                      #
-# Current link : 
-#       https://legacy.iho.int/mtg_docs/com_wg/S-23WG/S-23WG_Misc/Draft_2002/Draft_2002.htm
-# except for some adaptation to account for the discretization of    # 
-# the coastline on the ORCA1 grid as indicated in the comments.      #
-#                                                                    #
-# History : 2025 - initial version by Virginie Guemas                #
-######################################################################
-import sys
-import xarray as xr
