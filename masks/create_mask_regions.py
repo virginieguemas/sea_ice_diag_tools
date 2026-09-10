@@ -179,26 +179,15 @@ newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea')
 # To be filled here
 
 # 5. Arctic Ocean (S-23 9, opening definition)
-#  southern limit, from Norway eastward along the Atlantic side to Labrador:
-#  Norway (60.85N-4.67E) - Muckle Flugga (60.85N-0.88W) - Fugloy (62.35N-6.25W)
-#  - Stokksnes (64.23N-14.97W) - [Iceland coast] - Bjargtangar (65.5N-24.53W)
-#  - Kap Edward Holm (67.85N-32.18W) - [Greenland coast] - Greenland SW coast
-#  (60N-44.83W) - along the 60N parallel to Labrador (60N-64.17W)
-arc_atl_lon = [-64.17, -44.83, -32.18, -24.53, -14.97, -6.25, -0.88, 4.67]
-arc_atl_lat = [60.0, 60.0, 67.85, 65.5, 64.23, 62.35, 60.85, 60.85]
-#  from Labrador westward along the northern mainland coast of North America
-#  to Seward Peninsula (66.18N-164.23W), then a line to Poluostrov Chukotskiy
-#  (66.37N-170.58W, the common limit with the North Pacific Ocean)
-arc_ame_lon = [-170.58, -164.23, -64.17]
-arc_ame_lat = [66.37, 66.18, 60.0]
-#  from Chukotskiy westward along the coasts of Russia and Norway back to
-#  Norway's southwestern coast; this very long coastal stretch is simplified
-#  here as a single line between its two named endpoints, as elsewhere in
-#  this file (the land-sea mask does the detailed work along the coast)
-arc_rus_lon = [4.67, 180.0]
-arc_rus_lat = [60.85, 66.37]
-arc_south_lim = xr.where(longitude > 4.67, np.interp(longitude, arc_rus_lon, arc_rus_lat), xr.where(longitude > -64.17, np.interp(longitude, arc_atl_lon, arc_atl_lat), np.interp(longitude, arc_ame_lon, arc_ame_lat)))
-arcticoc = xr.where(latitude > arc_south_lim, maskvar, 0)
+arc_atl_lon = [-64.17, -44.83, -44.83, -32.18, -24.53, -14.97, -6.25, -0.88, 4.67]
+arc_atl_lat = [60.0, 60.0, 67.85, 67.85, 65.5, 64.23, 62.35, 60.85, 60.85]
+arc_ame_lon = [-180.,-170.58, -164.23, -100., -100., -72. , -72., -64.17, -64.17]
+arc_ame_lat = [66.37, 66.37, 66.18, 66.18, 50., 50., 57.5  ,57.5 ,60.0]
+arc_rus_lon = [4.67, 15., 30., 30., 90., 90., 180.]
+arc_rus_lat = [60.85, 67., 67., 60., 60., 66.37, 66.37]
+arc_south_lim_lon = arc_ame_lon + arc_atl_lon + arc_rus_lon
+arc_south_lim_lat = arc_ame_lat + arc_atl_lat + arc_rus_lat
+arcticoc = xr.where(latitude > np.interp(longitude, arc_south_lim_lon, arc_south_lim_lat), maskvar, 0)
 newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocean'))
 #
 # 5a. Fram Strait
@@ -252,11 +241,11 @@ nwpbeau_lat = [70.58, 71.97, 74.35, 76.10, 76.33]
 nwpbeau_lon = [-128.03, -126.02, -124.77, -123.01, -122.58]
 #
 # 5b. East Siberian Sea (S-23 9.1)
-eastsibe = xr.where((longitude > 139) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 69.58) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
+eastsibe = xr.where((longitude > np.interp(latitude, [79., 73., 72.5, 65.], [139., 139., 140., 140.])) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 65.) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
-laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < 139), maskvar, 0)
+laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, [79., 73., 72.5, 65.], [139., 139., 140., 140.])), maskvar, 0)
 newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
 #
 # 5d. Kara Sea (S-23 9.3)
@@ -282,7 +271,7 @@ norw_north_lon = [-9.00, -7.97, 16.62, 19.10, 25.78]
 norw_north_lat = [70.83, 71.17, 76.47, 74.43, 71.17]
 norw_south_lon = [-6.25, -0.88, 4.67]
 norw_south_lat = [62.35, 61.00, 61.00]
-norwegia = xr.where((latitude > np.interp(longitude, norw_south_lon, norw_south_lat)) & (latitude < np.interp(longitude, norw_north_lon, norw_north_lat)) & (longitude > np.interp(latitude, norice_lat, norice_lon)) & (longitude < 26), maskvar, 0)
+norwegia = xr.where((latitude > np.interp(longitude, norw_south_lon, norw_south_lat)) & (latitude < np.interp(longitude, norw_north_lon, norw_north_lat)) & (longitude > np.interp(latitude, norice_lat, norice_lon)) & (longitude < np.interp(latitude, [61., 70.], [10., 26])), maskvar, 0)
 newmask['norwegia'] = xr.DataArray(norwegia, attrs=dict(long_name = 'Norwegian Sea'))
 #
 # 5i. Iceland Sea (S-23 9.8)
@@ -292,8 +281,8 @@ icelands = xr.where((latitude > np.interp(longitude, [-14.97, -6.25], [64.23, 62
 newmask['icelands'] = xr.DataArray(icelands, attrs=dict(long_name = 'Iceland Sea'))
 #
 # 5j. Davis Strait (S-23 9.9)
-ds_west_lat = [60.00, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88, 70.00]
-ds_west_lon = [-64.17, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97, -67.17]
+ds_west_lat = [60.00, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88, 63., 70.00]
+ds_west_lon = [-64.17, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97, -67.17, -67.17]
 davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > np.interp(latitude, ds_west_lat, ds_west_lon)) & (longitude < -44.83), maskvar, 0)
 newmask['davisstr'] = xr.DataArray(davisstr, attrs=dict(long_name = 'Davis Strait'))
 #
@@ -310,8 +299,8 @@ hudsonst = xr.where((latitude > np.interp(longitude, hs_south_lon, hs_south_lat)
 newmask['hudsonst'] = xr.DataArray(hudsonst, attrs=dict(long_name = 'Hudson Strait'))
 #
 # 5l. Hudson Bay (S-23 9.11)
-hb_north_lon = [-85.87, -85.53, -80.98, -78.10]
-hb_north_lat = [66.20, 65.92, 63.45, 62.37]
+hb_north_lon = [-100., -85.87, -85.53, -80.98, -78.10, -75.]
+hb_north_lat = [66.20, 66.20, 65.92, 63.45, 62.37, 62.]
 hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_lon, hb_north_lat)) & (longitude > -95) & (longitude < -76.), maskvar, 0)
 newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
 #
