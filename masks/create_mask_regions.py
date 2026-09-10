@@ -305,7 +305,21 @@ hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_
 newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
 #
 # 5m. Baffin Bay (S-23 9.12)
-baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > -80.23) & (longitude < np.interp(latitude, [70., 80., 80., 82.47],[-51.75, -51.75, 82.47, 82.47]), maskvar, 0)
+#  west limit follows Baffin, Bylot, Devon, Coburg and Ellesmere Islands:
+#  Baffin Island's NE coast to Cape Macculloch (72.5N-75.17W), then Cape Graham
+#  Moore (75.87N-76.07W), the SE tip of Bylot Island; Bylot's own coast then
+#  dips back down to Cape Liverpool (73.67N-78.08W) before the chain resumes
+#  northward via Devon Island (Sherard/Fitz Roy) and Coburg Island (Phillips
+#  Point) to Cape Norton Shaw (76.4N-78.6W), the common limit with the
+#  Northwestern Passages; the two chains overlap between 73.67N and 75.87N
+#  because of the Bylot Island indentation, so the more restrictive (more
+#  eastern) of the two is used there
+baff_west_a_lat = [70.00, 72.50, 75.87]
+baff_west_a_lon = [-67.25, -75.17, -76.07]
+baff_west_b_lat = [73.67, 74.60, 75.60, 75.85, 76.10, 76.40]
+baff_west_b_lon = [-78.08, -80.23, -80.12, -78.92, -79.07, -78.60]
+baff_west_lon = xr.where(latitude > 75.87, np.interp(latitude, baff_west_b_lat, baff_west_b_lon), xr.where(latitude > 73.67, np.maximum(np.interp(latitude, baff_west_a_lat, baff_west_a_lon), np.interp(latitude, baff_west_b_lat, baff_west_b_lon)), np.interp(latitude, baff_west_a_lat, baff_west_a_lon)))
+baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > baff_west_lon) & (longitude < -51.75), maskvar, 0)
 newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
 #
 # 5n. Lincoln Sea (S-23 9.13)
