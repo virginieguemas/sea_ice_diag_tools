@@ -8,7 +8,7 @@
 # and latitude, and the mask file it writes (outfile there) for the sea
 # masks -- run create_mask_regions.py first, from this same directory.
 #
-# History : 2026 - initial version by Claude Sonnet 5, at Virginie Guemas' request
+# History : 2026 - initial version 
 ######################################################################
 import os
 import numpy as np
