@@ -101,25 +101,25 @@ newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Se
 #
 # 4c. Bellingshausen Sea (S-23 10.12)
 # Western limit shifted eastward as for the Amundsen sea
-# northern limit tilted northeastward between Cape Flying Fish and Peter I island represented with staircase here
-bellings = xr.where(((latitude < -72.10) & (longitude > -102.25) & (longitude < -90.62)), maskvar, 0)
-latlim = -72.10
-for xlon in np.arange(-101.47,-90.62):
-  latlim = latlim +0.307
-  bellings = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)), maskvar, bellings)
-for xlon in np.arange(-90.62,-67.80,2):
-  latlim = latlim +0.174
-  bellings = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+2)), maskvar, bellings)
-
+# northern limit follows the exact line from Cape Flying Fish (72.10S-102.25W,
+# ORCA1-adjusted) through Peter I Island (68.72S-90.62W) to Adelaide Island (66.63S-67.80W)
+bell_north_lon = [-102.25, -90.62, -67.80]
+bell_north_lat = [-72.10, -68.72, -66.63]
+bellings = xr.where((latitude < np.interp(longitude, bell_north_lon, bell_north_lat)) & (longitude > -102.25) & (longitude < -67.80), maskvar, 0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 #
 # 4d. Weddell Sea (S-23 10.1)
-#  northern limit tilted close to 60S and set to 60S here
-#  eastern limit tilted westward with its southernmost point at 12.27W, set to 12.27W here
+#  northern limit follows the exact chain from Fitzroy Point (63.18S-55.15W)
+#  through Cape Bowles, Cape Lloyd, Return Point and Cape Dundas to Thule Island (59.45S-27.37W)
+#  eastern limit follows the exact line from Thule Island to Cape Norvegia (71.38S-12.27W)
 #  western limit follows coastline near 60W until the tip of the Antartic Peninsula where it goes north
 #     tip of Antartic Peninsula in ORCA1 is 57W
 #  65S and 62W set to follow the ORCA1 coastline
-weddells = xr.where(((latitude < -60) & (longitude > -57) & (longitude < -12.27)) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
+wedd_north_lon = [-55.15, -54.10, -53.98, -46.05, -44.43, -27.37]
+wedd_north_lat = [-63.18, -61.30, -61.13, -60.63, -60.73, -59.45]
+wedd_east_lat = [-71.38, -59.45]
+wedd_east_lon = [-12.27, -27.37]
+weddells = xr.where(((latitude < np.interp(longitude, wedd_north_lon, wedd_north_lat)) & (longitude > -57) & (longitude < np.interp(latitude, wedd_east_lat, wedd_east_lon))) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
 # 4e. Lazarev Sea (S-23 10.2)
@@ -139,12 +139,13 @@ cooperat = xr.where((latitude < -65) & (longitude > 53.80) & (longitude < 81.67)
 newmask['cooperat'] = xr.DataArray(cooperat, attrs=dict(long_name = 'Cooperation Sea'))
 #
 # 4i. Davis Sea (S-23 10.6)
-#  northern limit tilted from 65S on the west to 64S on the east, set to 65S
-davissea = xr.where((latitude < -65) & (longitude > 81.67) & (longitude < 95.58), maskvar, 0)
+#  northern limit follows the exact line from 65S-81.67E to 64S-95.58E
+davissea = xr.where((latitude < np.interp(longitude, [81.67, 95.58], [-65.0, -64.0])) & (longitude > 81.67) & (longitude < 95.58), maskvar, 0)
 newmask['davissea'] = xr.DataArray(davissea, attrs=dict(long_name = 'Davis Sea'))
 #
 # 4ibis. Tryoshnikova Gulf (S-23 10.6.1)
-tryoshni = xr.where((latitude < -65) & (longitude > 88.02) & (longitude < 95.58), maskvar, 0)
+#  northern limit follows the exact line from Cape Maksimova (65.92S-88.02E) to Cape Vize (64.93S-95.58E)
+tryoshni = xr.where((latitude < np.interp(longitude, [88.02, 95.58], [-65.92, -64.93])) & (longitude > 88.02) & (longitude < 95.58), maskvar, 0)
 newmask['tryoshni'] = xr.DataArray(tryoshni, attrs=dict(long_name = 'Tryoshnikova Gulf'))
 #
 # 4j. Mawson sea (S-23 10.7)
@@ -156,18 +157,15 @@ dumontdu = xr.where((latitude < -64) & (longitude > 136.20) & (longitude < 146.8
 newmask['dumontdu'] = xr.DataArray(dumontdu, attrs=dict(long_name = 'Dumont d\'Urville Sea'))
 #
 # 4l. Somov Sea
-# northern limit tilted from 64S on the west to 66.27S on the east (Cape Ellsworthy), set to 65S here
-somovsea = xr.where((latitude < -65) & (longitude > 146.83) & (longitude < 162.32), maskvar, 0)
-# eastern limit follows two segments: Cape Ellsworthy (66.27S-162.32E) to Smith Point
-# (67.60S-164.82E), then Smith Point to Cape Adare (71.30S-170.23E, shared with the Ross Sea)
-somovsea = xr.where((latitude < -66.27) & (longitude > 162.32) & (longitude < 163.32), maskvar, somovsea)
-latlim = -66.27
-for xlon in np.arange(163.32,164.82):
-  latlim = latlim -0.665
-  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)) & (longitude < 164.82), maskvar, somovsea)
-for xlon in np.arange(164.82,170.23):
-  latlim = latlim -0.6167
-  somovsea = xr.where((latitude < latlim) & (longitude > xlon) & (longitude < (xlon+1)) & (longitude < 170.23) & (latitude > -72), maskvar, somovsea)
+#  northern limit follows the exact line from 64S-146.83E to Cape Ellsworthy (66.27S-162.32E)
+#  eastern limit follows the exact line from Cape Ellsworthy through Smith Point
+#  (67.60S-164.82E) to Cape Adare (71.30S-170.23E, shared with the Ross Sea)
+somov_north_lon = [146.83, 162.32]
+somov_north_lat = [-64.0, -66.27]
+somov_east_lon = [162.32, 164.82, 170.23]
+somov_east_lat = [-66.27, -67.60, -71.30]
+somovsea = xr.where((latitude < np.interp(longitude, somov_north_lon, somov_north_lat)) & (longitude > 146.83) & (longitude <= 162.32), maskvar, 0)
+somovsea = xr.where((latitude < np.interp(longitude, somov_east_lon, somov_east_lat)) & (longitude > 162.32) & (longitude < 170.23) & (latitude > -72), maskvar, somovsea)
 newmask['somovsea'] = xr.DataArray(somovsea, attrs=dict(long_name = 'Somov Sea'))
 
 # 4m Drake Passage
