@@ -101,20 +101,13 @@ newmask['amundsen'] = xr.DataArray(amundsen, attrs=dict(long_name = 'Amundsen Se
 #
 # 4c. Bellingshausen Sea (S-23 10.12)
 # Western limit shifted eastward as for the Amundsen sea
-# northern limit follows the exact line from Cape Flying Fish (72.10S-102.25W,
-# ORCA1-adjusted) through Peter I Island (68.72S-90.62W) to Adelaide Island (66.63S-67.80W)
-bell_north_lon = [-102.25, -90.62, -67.80]
-bell_north_lat = [-72.10, -68.72, -66.63]
-bellings = xr.where((latitude < np.interp(longitude, bell_north_lon, bell_north_lat)) & (longitude > -102.25) & (longitude < -67.80), maskvar, 0)
+# Eastern limit along the coast
+bell_north_lon = [-102.25, -90.62, -67.80, -65. ]
+bell_north_lat = [-72.10, -68.72, -66.63, -66.63]
+bellings = xr.where((latitude < np.interp(longitude, bell_north_lon, bell_north_lat)) & (longitude > -102.25) & (longitude < -65.), maskvar, 0)
 newmask['bellings'] = xr.DataArray(bellings, attrs=dict(long_name = 'Bellingshausen Sea'))
 #
 # 4d. Weddell Sea (S-23 10.1)
-#  northern limit follows the exact chain from Fitzroy Point (63.18S-55.15W)
-#  through Cape Bowles, Cape Lloyd, Return Point and Cape Dundas to Thule Island (59.45S-27.37W)
-#  eastern limit follows the exact line from Thule Island to Cape Norvegia (71.38S-12.27W)
-#  western limit follows coastline near 60W until the tip of the Antartic Peninsula where it goes north
-#     tip of Antartic Peninsula in ORCA1 is 57W
-#  65S and 62W set to follow the ORCA1 coastline
 wedd_north_lon = [-55.15, -54.10, -53.98, -46.05, -44.43, -27.37]
 wedd_north_lat = [-63.18, -61.30, -61.13, -60.63, -60.73, -59.45]
 wedd_east_lat = [-71.38, -59.45]
@@ -139,12 +132,10 @@ cooperat = xr.where((latitude < -65) & (longitude > 53.80) & (longitude < 81.67)
 newmask['cooperat'] = xr.DataArray(cooperat, attrs=dict(long_name = 'Cooperation Sea'))
 #
 # 4i. Davis Sea (S-23 10.6)
-#  northern limit follows the exact line from 65S-81.67E to 64S-95.58E
 davissea = xr.where((latitude < np.interp(longitude, [81.67, 95.58], [-65.0, -64.0])) & (longitude > 81.67) & (longitude < 95.58), maskvar, 0)
 newmask['davissea'] = xr.DataArray(davissea, attrs=dict(long_name = 'Davis Sea'))
 #
 # 4ibis. Tryoshnikova Gulf (S-23 10.6.1)
-#  northern limit follows the exact line from Cape Maksimova (65.92S-88.02E) to Cape Vize (64.93S-95.58E)
 tryoshni = xr.where((latitude < np.interp(longitude, [88.02, 95.58], [-65.92, -64.93])) & (longitude > 88.02) & (longitude < 95.58), maskvar, 0)
 newmask['tryoshni'] = xr.DataArray(tryoshni, attrs=dict(long_name = 'Tryoshnikova Gulf'))
 #
@@ -157,9 +148,7 @@ dumontdu = xr.where((latitude < -64) & (longitude > 136.20) & (longitude < 146.8
 newmask['dumontdu'] = xr.DataArray(dumontdu, attrs=dict(long_name = 'Dumont d\'Urville Sea'))
 #
 # 4l. Somov Sea
-#  northern limit follows the exact line from 64S-146.83E to Cape Ellsworthy (66.27S-162.32E)
-#  eastern limit follows the exact line from Cape Ellsworthy through Smith Point
-#  (67.60S-164.82E) to Cape Adare (71.30S-170.23E, shared with the Ross Sea)
+# 72S set to avoid capturing part of Ross sea
 somov_north_lon = [146.83, 162.32]
 somov_north_lat = [-64.0, -66.27]
 somov_east_lon = [162.32, 164.82, 170.23]
@@ -210,31 +199,31 @@ newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait
 
 # 5b-5q. Arctic Ocean sub-divisions, based on
 #
-# Laptev Sea / Kara Sea, following the Severnaya Zemlya archipelago (S-23 9.2 West / 9.3 East)
+# Kara Sea / Laptev Sea (S-23 9.2 West / 9.3 East)
 #sevzem_lat = [77.53, 78.30, 79.42, 79.67, 80.17, 80.22, 81.27]
 #sevzem_lon = [105.92, 104.83, 102.42, 100.33, 97.67, 97.33, 95.75]
 # Adaptation for ORCA1 NEMO4.2.3
 sevzem_lat = [77.53, 78.30, 79.42, 79.60, 80.17, 80.22, 81.27]
 sevzem_lon = [105.92, 104.83, 102.42, 100.25, 97.67, 97.33, 95.75]
 #
-# Kara Sea / Barents Sea, following the Novaya Zemlya archipelago (S-23 9.3 West / 9.4 East)
+# Barents Sea / Kara Sea (S-23 9.3 West / 9.4 East)
 novzem_lat = [69.60, 69.67, 70.25, 70.47, 73.28, 73.35, 76.95, 81.00]
 novzem_lon = [60.20, 59.98, 58.43, 57.12, 53.88, 54.08, 68.58, 65.33]
 #
-# Barents Sea / Norwegian Sea, following Norway, Bjornoya and Svalbard (S-23 9.4 West / 9.7 Northeast)
+# Norwegian Sea / Barents Sea (S-23 9.4 West / 9.7 Northeast)
 barnor_lat = [71.17, 74.35, 74.52, 76.47, 80.07]
 barnor_lon = [25.78, 19.08, 19.12, 16.62, 16.27]
 #
-# Greenland Sea east/southeast/south limit, following Svalbard and Jan Mayen,
+# Greenland Sea east/southeast/south limit
 # the common limit with the Norwegian Sea (S-23 9.6 East/Southeast/South)
 greennor_lat = [70.15, 70.83, 71.17, 76.47, 80.07]
 greennor_lon = [-22.07, -9.00, -7.97, 16.62, 16.27]
 #
-# Norwegian Sea / Iceland Sea, from Fugloy to Sorkapp on Jan Mayen (S-23 9.7 West / 9.8 East)
+# Iceland Sea / Norwegian Sea (S-23 9.7 West / 9.8 East)
 norice_lat = [62.35, 70.83]
 norice_lon = [-6.25, -9.00]
 #
-# Northwestern Passages / Beaufort Sea, from Cape Bathurst to Griffiths Point (S-23 9.14 West / 9.15 East)
+# Beaufort Sea / Northwestern Passages (S-23 9.14 West / 9.15 East)
 nwpbeau_lat = [70.58, 71.97, 74.35, 76.10, 76.33]
 nwpbeau_lon = [-128.03, -126.02, -124.77, -123.01, -122.58]
 #
@@ -303,21 +292,9 @@ hudsonba = xr.where((latitude > 51) & (latitude < np.interp(longitude, hb_north_
 newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'))
 #
 # 5m. Baffin Bay (S-23 9.12)
-#  west limit follows Baffin, Bylot, Devon, Coburg and Ellesmere Islands:
-#  Baffin Island's NE coast to Cape Macculloch (72.5N-75.17W), then Cape Graham
-#  Moore (75.87N-76.07W), the SE tip of Bylot Island; Bylot's own coast then
-#  dips back down to Cape Liverpool (73.67N-78.08W) before the chain resumes
-#  northward via Devon Island (Sherard/Fitz Roy) and Coburg Island (Phillips
-#  Point) to Cape Norton Shaw (76.4N-78.6W), the common limit with the
-#  Northwestern Passages; the two chains overlap between 73.67N and 75.87N
-#  because of the Bylot Island indentation, so the more restrictive (more
-#  eastern) of the two is used there
-baff_west_a_lat = [70.00, 72.50, 75.87]
-baff_west_a_lon = [-67.25, -75.17, -76.07]
-baff_west_b_lat = [73.67, 74.60, 75.60, 75.85, 76.10, 76.40]
-baff_west_b_lon = [-78.08, -80.23, -80.12, -78.92, -79.07, -78.60]
-baff_west_lon = xr.where(latitude > 75.87, np.interp(latitude, baff_west_b_lat, baff_west_b_lon), xr.where(latitude > 73.67, np.maximum(np.interp(latitude, baff_west_a_lat, baff_west_a_lon), np.interp(latitude, baff_west_b_lat, baff_west_b_lon)), np.interp(latitude, baff_west_a_lat, baff_west_a_lon)))
-baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > baff_west_lon) & (longitude < -51.75), maskvar, 0)
+baff_west_lat = [70.00, 74.60, 80., 82.47]
+baff_west_lon = [-80.23, -80.23, -80.23,  -61.52]
+baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > np.interp(latitude, baff_west_lat, baff_west_lon)) & (longitude < -51.75), maskvar, 0)
 newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
 #
 # 5n. Lincoln Sea (S-23 9.13)
