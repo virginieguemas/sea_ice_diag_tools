@@ -294,27 +294,23 @@ newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'
 # 5m. Baffin Bay (S-23 9.12)
 baff_west_lat = [70.00, 74.60, 80., 82.47]
 baff_west_lon = [-80.23, -80.23, -80.23,  -61.52]
-baffinba = xr.where((latitude > 70) & (latitude < 82.47) & (longitude > np.interp(latitude, baff_west_lat, baff_west_lon)) & (longitude < -51.75), maskvar, 0)
+baff_north_lat = [82.47, 82.35]
+baff_north_lon = [-61.52, -55.17]
+baffinba = xr.where((latitude > 70) & (latitude < np.interp(longitude, baff_north_lon, baff_north_lat)) & (longitude > np.interp(latitude, baff_west_lat, baff_west_lon)) & (longitude < -51.75), maskvar, 0)
 newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
 #
 # 5n. Lincoln Sea (S-23 9.13)
-#  between northern Ellesmere Island and northern Greenland
-lincolns = xr.where((latitude > 82.35) & (latitude < 83.63) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
+linc_south_lon = [-70] + baff_north_lon + [-55.17, -33.93]
+linc_south_lat =  [82.47] + baff_north_lat + [81., 81.]
+lincolns = xr.where((latitude > np.interp(longitude, linc_south_lon, linc_south_lat)) & (latitude < np.interp(longitude, [33.93, 71.25], [83.63, 83.15])) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
 newmask['lincolns'] = xr.DataArray(lincolns, attrs=dict(long_name = 'Lincoln Sea'))
 #
 # 5o. Northwestern Passages (S-23 9.14)
-#  north limit follows the exact chain from Griffiths Point to Lands Lokk Point
-#  west limit follows the common limit with the Beaufort Sea
-#  south limit follows the chain from Beach Point to Lloyd Point (the common
-#  limits with the Hudson Bay and the Hudson Strait); west of Beach Point it
-#  is left to the land-sea mask, which hugs the mainland coast of Canada down to Cape Bathurst
-#  east limit kept as a simple envelope following the western coasts of
-#  Ellesmere/Devon/Bylot/Baffin Islands, handled by the land-sea mask
-nwp_north_lon = [-123.02, -116.40, -115.08, -114.33, -113.30, -110.72, -105.43, -99.77, -94.12, -91.90]
-nwp_north_lat = [76.10, 77.57, 77.97, 78.08, 78.35, 78.77, 79.33, 80.15, 81.37, 81.62]
-nwp_south_lon = [-85.87, -85.53, -80.15, -78.03]
-nwp_south_lat = [66.20, 65.92, 63.78, 64.43]
-nwpassag = xr.where((latitude > np.interp(longitude, nwp_south_lon, nwp_south_lat)) & (latitude < np.interp(longitude, nwp_north_lon, nwp_north_lat)) & (longitude > np.interp(latitude, nwpbeau_lat, nwpbeau_lon)) & (longitude < -75.17), maskvar, 0)
+nwp_north_lon = [-116.40, -115.08, -114.33, -113.30, -110.72, -105.43, -99.77, -94.12, -91.90]
+nwp_north_lat = [77.57, 77.97, 78.08, 78.35, 78.77, 79.33, 80.15, 81.37, 81.62]
+nwp_south_lon = [-130., -85.87, -85.53, -80.15, -78.03]
+nwp_south_lat = [66.20, 66.20, 65.92, 63.78, 64.43]
+nwpassag = xr.where((latitude > np.interp(longitude, ds_west_lon[:-3:-1] + hs_north_lon[1::-1] + nwp_south_lat, ds_west_lat[:-3:-1] + hs_north_lat[1::-1] + nwp_south_lat)) & (latitude < np.interp(longitude, nwpbeau_lon + nwp_north_lon + baff_west_lon[::-1], nwpbeau_lat + nwp_north_lat + baff_west_lat[::-1])) & (longitude > np.interp(latitude, [65.] + nwpbeau_lat + nwp_north_lat, [-128.03] + nwpbeau_lon +  nwp_north_lon)) & (longitude < np.interp(latitude, baff_west_lat[::-1] + ds_west_lat[:-3:-1] + hs_north_lat[1::-1], baff_west_lon[::-1] + ds_west_lon[:-3:-1] + hs_north_lon[1::-1])), maskvar, 0)
 newmask['nwpassag'] = xr.DataArray(nwpassag, attrs=dict(long_name = 'Northwestern Passages'))
 #
 # 5p. Beaufort Sea (S-23 9.15)
