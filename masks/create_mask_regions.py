@@ -227,11 +227,11 @@ nwpbeau_lat = [70.58, 71.97, 74.35, 76.10, 76.33]
 nwpbeau_lon = [-128.03, -126.02, -124.77, -123.01, -122.58]
 #
 # 5b. East Siberian Sea (S-23 9.1)
-eastsibe = xr.where((longitude > np.interp(latitude, [79., 73., 72.5, 65.], [139., 139., 140., 140.])) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 65.) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
+eastsibe = xr.where((longitude > np.interp(latitude, [65., 72.5, 73., 79.], [140., 140., 139., 139.])) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 65.) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
-laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, [79., 73., 72.5, 65.], [139., 139., 140., 140.])), maskvar, 0)
+laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, [65., 72.5, 73., 79.], [140., 140., 139., 139.])), maskvar, 0)
 newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
 #
 # 5d. Kara Sea (S-23 9.3)
@@ -301,7 +301,7 @@ newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'
 # 5n. Lincoln Sea (S-23 9.13)
 linc_south_lon = [-70] + baff_north_lon + [-55.17, -33.93]
 linc_south_lat =  [82.47] + baff_north_lat + [81., 81.]
-lincolns = xr.where((latitude > np.interp(longitude, linc_south_lon, linc_south_lat)) & (latitude < np.interp(longitude, [33.93, 71.25], [83.63, 83.15])) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
+lincolns = xr.where((latitude > np.interp(longitude, linc_south_lon, linc_south_lat)) & (latitude < np.interp(longitude, [-71.25, -33.93], [83.15, 83.63])) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
 newmask['lincolns'] = xr.DataArray(lincolns, attrs=dict(long_name = 'Lincoln Sea'))
 #
 # 5o. Northwestern Passages (S-23 9.14)
@@ -312,6 +312,7 @@ nwp_south_lat = [66.20, 66.20, 65.92]
 nwp_east_lon = baff_west_lon[::-1] + [-67.17, -67.17] + hs_north_lon[1::-1]
 nwp_east_lat = baff_west_lat[::-1] + [70.0, 65.0] + hs_north_lat[1::-1]
 nwpassag = xr.where((latitude > np.interp(longitude, nwp_south_lon + hs_north_lon[:2] + ds_west_lon[-2:], nwp_south_lat + hs_north_lat[:2] + ds_west_lat[-2:])) & (latitude < np.interp(longitude, nwpbeau_lon + nwp_north_lon + baff_west_lon[::-1], nwpbeau_lat + nwp_north_lat + baff_west_lat[::-1])) & (longitude > np.interp(latitude, [65.] + nwpbeau_lat + nwp_north_lat, [-128.03] + nwpbeau_lon +  nwp_north_lon)) & (longitude < np.interp(latitude, nwp_east_lat[::-1], nwp_east_lon[::-1])), maskvar, 0)
+# VERIFIER LA LIMITE NORD
 newmask['nwpassag'] = xr.DataArray(nwpassag, attrs=dict(long_name = 'Northwestern Passages'))
 #
 # 5p. Beaufort Sea (S-23 9.15)
