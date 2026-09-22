@@ -16,17 +16,21 @@ import getpass
 import numpy as np
 
 # Input arguments
-grid = 'cnrmcm7'
-#grid = 'N3.2_O1L42'
+#grid = 'cnrmcm7'
+grid = 'N3.2_O1L42'
 
 # Read longitudes, latitudes and land-sea mask
 
 if grid == 'N3.2_O1L42': 
    
-   maskfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
-   masktmp = xr.open_dataset(maskfile)
-   msk_name = 'tmask'
-   maskvar = masktmp[msk_name].isel(t = 0,z = 0).squeeze(drop=True)
+   maskfile  = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
+   masktmp   = xr.open_dataset(maskfile)
+   msk_name  = 'tmask'
+   umsk_name = 'umaskutil'
+   vmsk_name = 'vmaskutil'
+   maskvar   = masktmp[msk_name].isel(t = 0, z = 0).squeeze(drop=True)
+   umaskvar  = masktmp[umsk_name].isel(t = 0).squeeze(drop=True)
+   vmaskvar  = masktmp[vmsk_name].isel(t = 0).squeeze(drop=True)
 
    gridfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
    lon_name = 'nav_lon'
@@ -178,12 +182,12 @@ newmask['arcticoc'] = xr.DataArray(arcticoc, attrs=dict(long_name = 'Arctic Ocea
 # chosen as following 80N between Greenland (20W) and Svalbard (18E)
 
 framstra = xr.where((longitude > -20) & (longitude < 18), maskvar, 0)
-for jx in np.arange(latitude.shape[1]):
+for jx in range(latitude.shape[1]):
   jy = np.argmin(np.abs(latitude[:,jx].values-80))
   addpoint = False
   if framstra[jy, jx] > 0.5: 
     addpoint = True
-  framstra[: , jx] = 0.
+  framstra[:, jx] = 0.
   if addpoint:
     framstra[jy, jx] = 1.
 framstru = xr.where(framstra, umaskvar, 0)
