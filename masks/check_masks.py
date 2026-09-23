@@ -8,7 +8,7 @@
 # and latitude, and the mask file it writes (outfile there) for the sea
 # masks -- run create_mask_regions.py first, from this same directory.
 #
-# History : 2026 - initial version 
+# History : 2026 - initial version by Virginie Guemas 
 ######################################################################
 import os
 import numpy as np
@@ -17,13 +17,13 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
-# Input arguments -- keep this in sync with create_mask_regions.py
+# Input arguments 
 grid = 'cnrmcm7'
 #grid = 'N3.2_O1L42'
 
 if grid == 'N3.2_O1L42':
 
-   gridfile = os.path.expanduser('~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc')
+   gridfile = '/home/guemas/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
    lon_name = 'nav_lon'
    lat_name = 'nav_lat'
    maskfile = 'mask.ArcticSeas.N3.2_O1L42.nc'
@@ -37,7 +37,7 @@ elif grid == 'cnrmcm7':
 
 else:
 
-   raise SystemExit('unknown input grid')
+   sys.exit('unknown input grid')
 
 gridtmp = xr.open_dataset(gridfile)
 longitude = gridtmp[lon_name].squeeze(drop=True).values
@@ -45,14 +45,12 @@ latitude = gridtmp[lat_name].squeeze(drop=True).values
 
 masks = xr.open_dataset(maskfile)
 
-# Seas defined in create_mask_regions.py, grouped by hemisphere. The
-# aggregated masks (globocea, nhemisph, shemisph, antarcti, arcticoc,
-# mediterr) are left out, since coloring them too would just paint over the
-# individual seas; globocea is used below for the ocean/land background.
+# globocea, nhemisph, shemisph, antarcti, arcticoc, mediterr are left out
+# framstra, framstru, framstrv are left out
 antarctic_seas = ['rossseax', 'amundsen', 'bellings', 'weddells', 'lazarevs',
                    'riiserla', 'cosmonau', 'cooperat', 'davissea', 'tryoshni',
                    'mawsonse', 'dumontdu', 'somovsea']
-arctic_seas = ['framstra', 'eastsibe', 'laptevse', 'karaseax', 'barentse',
+arctic_seas = ['eastsibe', 'laptevse', 'karaseax', 'barentse',
                'whitesea', 'greenlds', 'norwegia', 'icelands', 'davisstr',
                'hudsonst', 'hudsonba', 'baffinba', 'lincolns', 'nwpassag',
                'beaufort', 'chukchis']
