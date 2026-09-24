@@ -1,0 +1,11 @@
+# Normalize line endings for text files so git stops reporting
+# CRLF/LF differences as content changes across environments.
+* text=auto eol=lf
+
+*.py  text eol=lf
+*.sh  text eol=lf
+*.md  text eol=lf
+README text eol=lf
+.gitignore text eol=lf
+
+*.doc binary
