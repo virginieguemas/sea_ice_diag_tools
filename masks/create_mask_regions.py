@@ -239,21 +239,23 @@ eastsibe = xr.where((longitude > np.interp(latitude, lapsib_lat, lapsib_lon)) & 
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
-laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, lapsib_lat, lapsib_lon)), maskvar, 0)
+laptevse = xr.where((latitude > 70.) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, lapsib_lat, lapsib_lon)), maskvar, 0)
 newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
 #
 # 5d. Kara Sea (S-23 9.3)
-karaseax = xr.where((latitude > 69.6) & (latitude < np.interp(longitude, [65.33, 95.75], [81.0, 81.27])) & (longitude > np.interp(latitude, novzem_lat, novzem_lon)) & (longitude < np.interp(latitude, sevzem_lat, sevzem_lon)), maskvar, 0)
+karaseax = xr.where((latitude > np.interp(longitude, [60.2, 65., 65., 110.], [69.6, 65., 60., 60.])) & (latitude < np.interp(longitude, [65.33, 95.75], [81.0, 81.27])) & (longitude > np.interp(latitude, novzem_lat, novzem_lon)) & (longitude < np.interp(latitude, sevzem_lat, sevzem_lon)), maskvar, 0)
 newmask['karaseax'] = xr.DataArray(karaseax, attrs=dict(long_name = 'Kara Sea'))
 #
 # 5e. Barents Sea (S-23 9.4)
 barn_north_lon = [16.27, 17.77, 26.83, 28.00, 32.67, 36.75, 44.92, 65.33]
 barn_north_lat = [80.07, 80.13, 80.17, 80.13, 80.17, 80.17, 80.60, 81.00]
-barentse = xr.where((latitude > 68.1) & (latitude < np.interp(longitude, barn_north_lon, barn_north_lat)) & (longitude > np.interp(latitude, barnor_lat, barnor_lon)) & (longitude < np.interp(latitude, novzem_lat, novzem_lon)), maskvar, 0)
+barn_south_lon = [20., 39.77, 43.3, 45., 45., 70.]
+barn_south_lat = [68.13, 68.13, 68.65, 68., 65., 65.]
+barentse = xr.where((latitude > np.interp(longitude, barn_south_lon, barn_south_lat)) & (latitude < np.interp(longitude, barn_north_lon, barn_north_lat)) & (longitude > np.interp(latitude, barnor_lat, barnor_lon)) & (longitude < np.interp(latitude, novzem_lat, novzem_lon)), maskvar, 0)
 newmask['barentse'] = xr.DataArray(barentse, attrs=dict(long_name = 'Barents Sea'))
 #
 # 5f. White Sea (S-23 9.5)
-whitesea = xr.where((latitude > 63) & (latitude < 68.1) & (longitude > 33) & (longitude < 45), maskvar, 0)
+whitesea = xr.where((latitude > 63) & (latitude < np.interp(longitude, barn_south_lon, barn_south_lat)) & (longitude > 33) & (longitude < 45), maskvar, 0)
 newmask['whitesea'] = xr.DataArray(whitesea, attrs=dict(long_name = 'White Sea'))
 #
 # 5g. Greenland Sea (S-23 9.6)
