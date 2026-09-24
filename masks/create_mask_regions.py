@@ -326,7 +326,6 @@ nwp_south_lat = [66.20, 66.20, 65.92]
 nwp_east_lon = baff_west_lon[::-1] + [-67.17, -67.17] + hs_north_lon[1::-1]
 nwp_east_lat = baff_west_lat[::-1] + [70.0, 65.0] + hs_north_lat[1::-1]
 nwpassag = xr.where((latitude > np.interp(longitude, nwp_south_lon + hs_north_lon[:2] + ds_west_lon[-2:], nwp_south_lat + hs_north_lat[:2] + ds_west_lat[-2:])) & (latitude < np.interp(longitude, nwpbeau_lon + nwp_north_lon, nwpbeau_lat + nwp_north_lat)) & (longitude > np.interp(latitude, [65.] + nwpbeau_lat + nwp_north_lat, [-128.03] + nwpbeau_lon +  nwp_north_lon)) & (longitude < np.interp(latitude, nwp_east_lat[::-1], nwp_east_lon[::-1])), maskvar, 0)
-# VERIFIER LA LIMITE NORD
 newmask['nwpassag'] = xr.DataArray(nwpassag, attrs=dict(long_name = 'Northwestern Passages'))
 #
 # 5p. Beaufort Sea (S-23 9.15)
@@ -341,12 +340,25 @@ newmask['chukchis'] = xr.DataArray(chukchis, attrs=dict(long_name = 'Chukchi Sea
 
 # 5s. Marginal Seas
 #dict_marg = ['Nordic Seas', 'Barents Sea', 'Kara Sea', 'Baffin Bay', 'Laptev Sea', 'Hudson', 'East Siberian Sea', 'Beaufort Sea', 'NorthWest Passage', 'Chukchi Sea', 'Bering', 'Okhotsk']
+#  union of every named sub-division defined above in section 5 (5a-5q); the
+#  complement of the Central Arctic (5t) within the Arctic Ocean (5)
+arc_subseas = framstra + eastsibe + laptevse + karaseax + barentse + whitesea + greenlds + norwegia + icelands + davisstr + hudsonst + hudsonba + baffinba + lincolns + nwpassag + beaufort + chukchis
+margseas = xr.where(arc_subseas > 0.5, maskvar, 0)
+newmask['margseas'] = xr.DataArray(margseas, attrs=dict(long_name = 'Arctic Marginal Seas'))
 
 # 5t. Central Arctic
-
+#  the Arctic Ocean (5) minus the Marginal Seas (5s), i.e. every named
+#  sub-division defined above in section 5 (5a-5q)
+centrarc = xr.where((arcticoc > 0.5) & (arc_subseas < 0.5), maskvar, 0)
+newmask['centrarc'] = xr.DataArray(centrarc, attrs=dict(long_name = 'Central Arctic'))
+#
 # 5u. West Central Arctic
+wcentarc = xr.where((centrarc > 0.5) & ((longitude > 90) | (longitude < -90)), maskvar, 0)
+newmask['wcentarc'] = xr.DataArray(wcentarc, attrs=dict(long_name = 'Western Central Arctic'))
 
 # 5v. East Central Arctic
+ecentarc = xr.where((centrarc > 0.5) & (longitude >= -90) & (longitude <= 90), maskvar, 0)
+newmask['ecentarc'] = xr.DataArray(ecentarc, attrs=dict(long_name = 'Eastern Central Arctic'))
 
 # 5w. Bering Strait
 
