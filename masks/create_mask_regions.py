@@ -16,8 +16,8 @@ import getpass
 import numpy as np
 
 # Input arguments
-#grid = 'cnrmcm7'
-grid = 'N3.2_O1L42'
+grid = 'cnrmcm7'
+#grid = 'N3.2_O1L42'
 
 # Read longitudes, latitudes and land-sea mask
 
@@ -197,7 +197,15 @@ newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait
 newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
 
 # 5b-5q. Arctic Ocean sub-divisions, based on
+# 
+# Chukchi Sea / East Siberian Sea (9.1 East / 9.16 West)
+chuksib_lat = [69.58, 70.78, 71.53, 76]
+chuksib_lon = [177.5, 178.75, 180, 180]
 #
+# Laptev Sea / East Siberian Sea (S-23 9.2 East / 9.1 West)
+lapsib_lat = [65., 72.5, 73.35, 74.17, 74.61, 76.2, 79.] 
+lapsib_lon = [141., 141., 139.83, 140.5, 139.08, 139., 139.]
+
 # Kara Sea / Laptev Sea (S-23 9.2 West / 9.3 East)
 #sevzem_lat = [77.53, 78.30, 79.42, 79.67, 80.17, 80.22, 81.27]
 #sevzem_lon = [105.92, 104.83, 102.42, 100.33, 97.67, 97.33, 95.75]
@@ -227,11 +235,11 @@ nwpbeau_lat = [70.58, 71.97, 74.35, 76.10, 76.33]
 nwpbeau_lon = [-128.03, -126.02, -124.77, -123.01, -122.58]
 #
 # 5b. East Siberian Sea (S-23 9.1)
-eastsibe = xr.where((longitude > np.interp(latitude, [65., 72.5, 73., 79.], [140., 140., 139., 139.])) & (longitude < np.interp(latitude, [69.58, 70.78, 71.53, 76], [177.5, 178.75, 180, 180])) & (latitude > 65.) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
+eastsibe = xr.where((longitude > np.interp(latitude, lapsib_lat, lapsib_lon)) & (longitude < np.interp(latitude, chuksib_lat, chuksib_lon)) & (latitude > 65.) & (latitude < np.interp(longitude, [139, 180], [79, 76])), maskvar, 0)
 newmask['eastsibe'] = xr.DataArray(eastsibe, attrs=dict(long_name = 'East Siberian Sea'))
 #
 # 5c. Laptev Sea (S-23 9.2)
-laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, [65., 72.5, 73., 79.], [140., 140., 139., 139.])), maskvar, 0)
+laptevse = xr.where((latitude > 72.88) & (latitude < np.interp(longitude, [95.75, 139], [81.27, 79])) & (longitude > np.interp(latitude, sevzem_lat, sevzem_lon)) & (longitude < np.interp(latitude, lapsib_lat, lapsib_lon)), maskvar, 0)
 newmask['laptevse'] = xr.DataArray(laptevse, attrs=dict(long_name = 'Laptev Sea'))
 #
 # 5d. Kara Sea (S-23 9.3)
@@ -311,7 +319,7 @@ nwp_south_lon = [-130., -85.87, -85.53]
 nwp_south_lat = [66.20, 66.20, 65.92]
 nwp_east_lon = baff_west_lon[::-1] + [-67.17, -67.17] + hs_north_lon[1::-1]
 nwp_east_lat = baff_west_lat[::-1] + [70.0, 65.0] + hs_north_lat[1::-1]
-nwpassag = xr.where((latitude > np.interp(longitude, nwp_south_lon + hs_north_lon[:2] + ds_west_lon[-2:], nwp_south_lat + hs_north_lat[:2] + ds_west_lat[-2:])) & (latitude < np.interp(longitude, nwpbeau_lon + nwp_north_lon + baff_west_lon[::-1], nwpbeau_lat + nwp_north_lat + baff_west_lat[::-1])) & (longitude > np.interp(latitude, [65.] + nwpbeau_lat + nwp_north_lat, [-128.03] + nwpbeau_lon +  nwp_north_lon)) & (longitude < np.interp(latitude, nwp_east_lat[::-1], nwp_east_lon[::-1])), maskvar, 0)
+nwpassag = xr.where((latitude > np.interp(longitude, nwp_south_lon + hs_north_lon[:2] + ds_west_lon[-2:], nwp_south_lat + hs_north_lat[:2] + ds_west_lat[-2:])) & (latitude < np.interp(longitude, nwpbeau_lon + nwp_north_lon, nwpbeau_lat + nwp_north_lat)) & (longitude > np.interp(latitude, [65.] + nwpbeau_lat + nwp_north_lat, [-128.03] + nwpbeau_lon +  nwp_north_lon)) & (longitude < np.interp(latitude, nwp_east_lat[::-1], nwp_east_lon[::-1])), maskvar, 0)
 # VERIFIER LA LIMITE NORD
 newmask['nwpassag'] = xr.DataArray(nwpassag, attrs=dict(long_name = 'Northwestern Passages'))
 #
@@ -320,7 +328,7 @@ beaufort = xr.where((latitude > 68) & (latitude < np.interp(longitude, [-156.47,
 newmask['beaufort'] = xr.DataArray(beaufort, attrs=dict(long_name = 'Beaufort Sea'))
 #
 # 5q. Chukchi Sea (S-23 9.16)
-chukchis = xr.where((latitude > 66.18) & (latitude < 71.53) & ((longitude > np.interp(latitude, [70.78, 71.53], [178.75, 180.])) | (longitude < -156.47)), maskvar, 0)
+chukchis = xr.where((latitude > 66.18) & (latitude < 71.53) & ((longitude > np.interp(latitude, chuksib_lat, chuksib_lon)) | (longitude < -156.47)), maskvar, 0)
 newmask['chukchis'] = xr.DataArray(chukchis, attrs=dict(long_name = 'Chukchi Sea'))
 
 # 5r. GIN seas
