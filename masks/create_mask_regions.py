@@ -111,7 +111,9 @@ wedd_north_lon = [-55.15, -54.10, -53.98, -46.05, -44.43, -27.37]
 wedd_north_lat = [-63.18, -61.30, -61.13, -60.63, -60.73, -59.45]
 wedd_east_lat = [-71.38, -59.45]
 wedd_east_lon = [-12.27, -27.37]
-weddells = xr.where(((latitude < np.interp(longitude, wedd_north_lon, wedd_north_lat)) & (longitude > -57) & (longitude < np.interp(latitude, wedd_east_lat, wedd_east_lon))) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
+wedd_west_lat = [ -80., -70., 72., -63.18, -61.30, -61.13]
+wedd_west_lon = [ -57., -57., -65., -55.15,  -54.10, -53.98]
+weddells = xr.where(((latitude < np.interp(longitude, wedd_north_lon, wedd_north_lat)) & (longitude > np.interp(latitude, wedd_west_lat, wedd_west_lon)) & (longitude < np.interp(latitude, wedd_east_lat, wedd_east_lon))) | ((latitude < -65) & (longitude > -62) & (longitude < -57)) | ((latitude < -64) & (longitude > -60) & (longitude < -57)), maskvar, 0)
 newmask['weddells'] = xr.DataArray(weddells, attrs=dict(long_name = 'Weddell Sea'))
 #
 # 4e. Lazarev Sea (S-23 10.2)
@@ -273,12 +275,14 @@ newmask['norwegia'] = xr.DataArray(norwegia, attrs=dict(long_name = 'Norwegian S
 # 5i. Iceland Sea (S-23 9.8)
 icel_west_lat = [65.50, 67.85, 70.15]
 icel_west_lon = [-24.53, -32.18, -22.07]
-icelands = xr.where((latitude > np.interp(longitude, [-14.97, -6.25], [64.23, 62.35])) & (latitude < np.interp(longitude, [-22.07, -9.00], [70.15, 70.83])) & (longitude < np.interp(latitude, norice_lat, norice_lon)) & (longitude > np.interp(latitude, icel_west_lat, icel_west_lon)), maskvar, 0)
+icel_south_lon = [-32.18, -24.53, -14.97, -6.15]
+icel_south_lat = [67.85, 65.5, 64.23, 62.35] 
+icelands = xr.where((latitude > np.interp(longitude, icel_south_lon, icel_south_lat)) & (latitude < np.interp(longitude, [-22.07, -9.00], [70.15, 70.83])) & (longitude < np.interp(latitude, norice_lat, norice_lon)) & (longitude > np.interp(latitude, icel_west_lat, icel_west_lon)), maskvar, 0)
 newmask['icelands'] = xr.DataArray(icelands, attrs=dict(long_name = 'Iceland Sea'))
 #
 # 5j. Davis Strait (S-23 9.9)
-ds_west_lat = [60.00, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88, 63., 70.00]
-ds_west_lon = [-64.17, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97, -67.17, -67.17]
+ds_west_lat = [60.00, 60.40, 61.32, 61.63, 61.75, 61.78, 61.88, 63., 70.]
+ds_west_lon = [-64.17, -64.43, -64.78, -65.48, -65.67, -65.95, -65.97, -70., -70.]
 davisstr = xr.where((latitude > 60) & (latitude < 70) & (longitude > np.interp(latitude, ds_west_lat, ds_west_lon)) & (longitude < -44.83), maskvar, 0)
 newmask['davisstr'] = xr.DataArray(davisstr, attrs=dict(long_name = 'Davis Strait'))
 #
