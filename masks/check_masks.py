@@ -45,15 +45,16 @@ latitude = gridtmp[lat_name].squeeze(drop=True).values
 
 masks = xr.open_dataset(maskfile)
 
-# globocea, nhemisph, shemisph, antarcti, arcticoc, mediterr are left out
-# framstra, framstru, framstrv are left out
+# globocea, nhemisph, shemisph, antarcti, arcticoc, centrarc, margseas, 
+# mediterr are left out
+# framstra, framstru, framstrv, 'tryoshni' are left out
 antarctic_seas = ['rossseax', 'amundsen', 'bellings', 'weddells', 'lazarevs',
-                   'riiserla', 'cosmonau', 'cooperat', 'davissea', 'tryoshni',
+                   'riiserla', 'cosmonau', 'cooperat', 'davissea', 
                    'mawsonse', 'dumontdu', 'somovsea']
-arctic_seas = ['eastsibe', 'laptevse', 'karaseax', 'barentse',
-               'whitesea', 'greenlds', 'norwegia', 'icelands', 'davisstr',
-               'hudsonst', 'hudsonba', 'baffinba', 'lincolns', 'nwpassag',
-               'beaufort', 'chukchis']
+arctic_seas = ['wcentarc', 'ecentarc', 'eastsibe', 'laptevse', 'karaseax', 
+               'barentse', 'whitesea', 'greenlds', 'norwegia', 'icelands', 
+               'davisstr', 'hudsonst', 'hudsonba', 'baffinba', 'lincolns', 
+               'nwpassag', 'beaufort', 'chukchis']
 
 
 def stereographic(lat, lon, hemisphere):
