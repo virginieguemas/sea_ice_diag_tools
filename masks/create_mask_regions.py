@@ -76,7 +76,7 @@ newmask = xr.Dataset(attrs=dict(description = 'Masks for individual seas and reg
 newmask['globocea'] = xr.DataArray(maskvar, attrs=dict(long_name = 'Global Ocean'))
 #
 # 2. Northern Hemisphere
-nhemisph = xr.where(latitude > 0, maskvar, 0) 
+nhemisph = xr.where(latitude >= 0, maskvar, 0) 
 newmask['nhemisph'] = xr.DataArray(nhemisph, attrs=dict(long_name = 'Northern Hemisphere'))
 #
 # 3. Southern Hemisphere
@@ -268,7 +268,7 @@ newmask['greenlds'] = xr.DataArray(greenlds, attrs=dict(long_name = 'Greenland S
 norw_north_lon = [-9.00, -7.97, 16.62, 19.10, 25.78]
 norw_north_lat = [70.83, 71.17, 76.47, 74.43, 71.17]
 norw_south_lon = [-6.25, -0.88, 4.67]
-norw_south_lat = [62.35, 61.00, 61.00]
+norw_south_lat = [62.35, 60.85, 60.85]
 norwegia = xr.where((latitude > np.interp(longitude, norw_south_lon, norw_south_lat)) & (latitude < np.interp(longitude, norw_north_lon, norw_north_lat)) & (longitude > np.interp(latitude, norice_lat, norice_lon)) & (longitude < np.interp(latitude, [61., 70.], [10., 26])), maskvar, 0)
 newmask['norwegia'] = xr.DataArray(norwegia, attrs=dict(long_name = 'Norwegian Sea'))
 #
@@ -307,15 +307,13 @@ newmask['hudsonba'] = xr.DataArray(hudsonba, attrs=dict(long_name = 'Hudson Bay'
 # 5m. Baffin Bay (S-23 9.12)
 baff_west_lat = [70.00, 74.60, 80., 82.47]
 baff_west_lon = [-71., -80.23, -80.23,  -61.52]
-baff_north_lat = [82.47, 82.35]
-baff_north_lon = [-61.52, -55.17]
+baff_north_lat = [82.47, 82.47, 82.35, 81., 81.]
+baff_north_lon = [-70., -61.52, -55.17, -55.17, -33.93]
 baffinba = xr.where((latitude > 70) & (latitude < np.interp(longitude, baff_north_lon, baff_north_lat)) & (longitude > np.interp(latitude, baff_west_lat, baff_west_lon)) & (longitude < -51.75), maskvar, 0)
 newmask['baffinba'] = xr.DataArray(baffinba, attrs=dict(long_name = 'Baffin Bay'))
 #
 # 5n. Lincoln Sea (S-23 9.13)
-linc_south_lon = [-70] + baff_north_lon + [-55.17, -33.93]
-linc_south_lat =  [82.47] + baff_north_lat + [81., 81.]
-lincolns = xr.where((latitude > np.interp(longitude, linc_south_lon, linc_south_lat)) & (latitude < np.interp(longitude, [-71.25, -33.93], [83.15, 83.63])) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
+lincolns = xr.where((latitude > np.interp(longitude, baff_north_lon, baff_north_lat)) & (latitude < np.interp(longitude, [-71.25, -33.93], [83.15, 83.63])) & (longitude > -71.25) & (longitude < -33.93), maskvar, 0)
 newmask['lincolns'] = xr.DataArray(lincolns, attrs=dict(long_name = 'Lincoln Sea'))
 #
 # 5o. Northwestern Passages (S-23 9.14)
@@ -339,16 +337,11 @@ newmask['chukchis'] = xr.DataArray(chukchis, attrs=dict(long_name = 'Chukchi Sea
 # 5r. GIN seas
 
 # 5s. Marginal Seas
-#dict_marg = ['Nordic Seas', 'Barents Sea', 'Kara Sea', 'Baffin Bay', 'Laptev Sea', 'Hudson', 'East Siberian Sea', 'Beaufort Sea', 'NorthWest Passage', 'Chukchi Sea', 'Bering', 'Okhotsk']
-#  union of every named sub-division defined above in section 5 (5a-5q); the
-#  complement of the Central Arctic (5t) within the Arctic Ocean (5)
-arc_subseas = framstra + eastsibe + laptevse + karaseax + barentse + whitesea + greenlds + norwegia + icelands + davisstr + hudsonst + hudsonba + baffinba + lincolns + nwpassag + beaufort + chukchis
+arc_subseas = eastsibe + laptevse + karaseax + barentse + whitesea + greenlds + norwegia + icelands + davisstr + hudsonst + hudsonba + baffinba + lincolns + nwpassag + beaufort + chukchis
 margseas = xr.where(arc_subseas > 0.5, maskvar, 0)
 newmask['margseas'] = xr.DataArray(margseas, attrs=dict(long_name = 'Arctic Marginal Seas'))
 
 # 5t. Central Arctic
-#  the Arctic Ocean (5) minus the Marginal Seas (5s), i.e. every named
-#  sub-division defined above in section 5 (5a-5q)
 centrarc = xr.where((arcticoc > 0.5) & (arc_subseas < 0.5), maskvar, 0)
 newmask['centrarc'] = xr.DataArray(centrarc, attrs=dict(long_name = 'Central Arctic'))
 #
