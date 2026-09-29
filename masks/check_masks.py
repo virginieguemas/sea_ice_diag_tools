@@ -10,44 +10,65 @@
 #
 # History : 2026 - initial version by Virginie Guemas 
 ######################################################################
+import sys
 import os
+import argparse
 import numpy as np
 import xarray as xr
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.colors import ListedColormap, BoundaryNorm
 
-# Input arguments 
-grid = 'cnrmcm7'
-#grid = 'N3.2_O1L42'
+# Input arguments
+parser = argparse.ArgumentParser(description='Checks the sea masks produced by create_mask_regions.py by plotting them on a polar stereographic projection')
+parser.add_argument('--gridfile', type=str, default='/cnrm/ioga/Users/guemas/gridfiles/meshmask/mesh_mask.cnrmcm7.nc', help='Path to the netcdf file containing the longitudes and latitudes')
+# For grid N3.2_O1L42, use : /home/guemas/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc
+parser.add_argument('--lon', type=str, default='glamt', help='Name of the longitude variable')
+# For grid N3.2_O1L42, use : nav_lon
+parser.add_argument('--lat', type=str, default='gphit', help='Name of the latitude variable')
+# For grid N3.2_O1L42, use : nav_lat
+parser.add_argument('--mask', type=str, default='/cnrm/ioga/Users/guemas/gridfiles/seas/mask.ArcticSeas.cnrmcm7.nc', help='Path to the mask netcdf file produced by create_mask_regions.py')
+# For grid N3.2_O1L42, use : mask.ArcticSeas.N3.2_O1L42.nc
+parser.add_argument('--label', type=str, default='cnrmcm7', help='Grid label used in the plot titles')
+# For grid N3.2_O1L42, use : N3.2_O1L42
+parser.add_argument('--latcutoff', type=float, default=45, help='Absolute latitude (degrees) at which each polar plot is cut off')
+args = parser.parse_args()
 
-if grid == 'N3.2_O1L42':
+gridfile   = args.gridfile
+lon_name   = args.lon
+lat_name   = args.lat
+maskfile   = args.mask
+label      = args.label
+lat_cutoff = args.latcutoff
 
-   gridfile = '/home/guemas/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
-   lon_name = 'nav_lon'
-   lat_name = 'nav_lat'
-   maskfile = 'mask.ArcticSeas.N3.2_O1L42.nc'
-
-elif grid == 'cnrmcm7':
-
-   gridfile = '/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc'
-   lon_name = 'glamt'
-   lat_name = 'gphit'
-   maskfile = 'mask.ArcticSeas.cnrmcm7.nc'
-
+if os.path.exists(gridfile):
+   gridtmp = xr.open_dataset(gridfile)
 else:
+   sys.exit('Grid file is missing')
 
-   sys.exit('unknown input grid')
+if lon_name not in gridtmp or lat_name not in gridtmp:
+   sys.exit('Longitude or latitude variable missing from grid file')
 
-gridtmp = xr.open_dataset(gridfile)
 longitude = gridtmp[lon_name].squeeze(drop=True).values
 latitude = gridtmp[lat_name].squeeze(drop=True).values
 
-masks = xr.open_dataset(maskfile)
+if latitude.shape != longitude.shape:
+   sys.exit('Latitudes and longitudes don\'t have the same dimensions')
+
+if os.path.exists(maskfile):
+   masks = xr.open_dataset(maskfile)
+else:
+   sys.exit('Mask file is missing')
+
+if 'globocea' not in masks:
+   sys.exit('globocea mask missing from mask file')
+
+if masks['globocea'].squeeze(drop=True).shape != latitude.shape:
+   sys.exit('Mask and latitude/longitude don\'t have the same dimensions')
 
 # globocea, nhemisph, shemisph, antarcti, arcticoc, centrarc, margseas, 
 # mediterr are left out
-# framstra, framstru, framstrv, 'tryoshni' are left out
+# framstra, framstru, framstrv, tryoshni are left out
 antarctic_seas = ['rossseax', 'amundsen', 'bellings', 'weddells', 'lazarevs',
                    'riiserla', 'cosmonau', 'cooperat', 'davissea', 
                    'mawsonse', 'dumontdu', 'somovsea']
@@ -118,6 +139,6 @@ def plot_hemisphere(hemisphere, seas, lat_cutoff, title, outfig):
     fig.savefig(outfig, dpi=150, bbox_inches='tight')
 
 
-plot_hemisphere('north', arctic_seas, 45, 'Arctic seas (' + grid + ')', 'check_masks_arctic.png')
-plot_hemisphere('south', antarctic_seas, -45, 'Antarctic seas (' + grid + ')', 'check_masks_antarctic.png')
+plot_hemisphere('north', arctic_seas, lat_cutoff, 'Arctic seas (' + label + ')', 'check_masks_arctic.png')
+plot_hemisphere('south', antarctic_seas, -lat_cutoff, 'Antarctic seas (' + label + ')', 'check_masks_antarctic.png')
 plt.show()
