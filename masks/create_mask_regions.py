@@ -10,61 +10,90 @@
 # History : 2026 - initial version by Virginie Guemas                #
 ######################################################################
 import sys
+import os
+import argparse
+import warnings
 import xarray as xr
 import datetime
 import getpass
 import numpy as np
 
 # Input arguments
-grid = 'cnrmcm7'
-#grid = 'N3.2_O1L42'
+parser = argparse.ArgumentParser(description='Defines a mask for each individual sea and region based on the official IHO Publication S-23 limits')
+parser.add_argument('--maskfile', type=str, default='/cnrm/ioga/Users/guemas/gridfiles/meshmask/mesh_mask.cnrmcm7.nc', help='Path to the netcdf file containing the land-sea mask')
+# For grid N3.2_O1L42, ~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc
+parser.add_argument('--gridfile', type=str, default='/cnrm/ioga/Users/guemas/gridfiles/meshmask/mesh_mask.cnrmcm7.nc', help='Path to the netcdf file containing the longitudes and latitudes')
+# For grid N3.2_O1L42,  ~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc
+parser.add_argument('--msk', type=str, default='tmaskutil', help='Name of the t-grid land-sea mask variable')
+# For grid N3.2_O1L42, tmask (note: tmask also has a z dimension )
+parser.add_argument('--umsk', type=str, default='umaskutil', help='Name of the u-grid land-sea mask variable')
+parser.add_argument('--vmsk', type=str, default='vmaskutil', help='Name of the v-grid land-sea mask variable')
+parser.add_argument('--lon', type=str, default='glamt', help='Name of the longitude variable')
+# For grid N3.2_O1L42,  nav_lon
+parser.add_argument('--lat', type=str, default='gphit', help='Name of the latitude variable')
+# For grid N3.2_O1L42, nav_lat
+parser.add_argument('--out', type=str, default='/cnrm/ioga/Users/guemas/gridfiles/seas/mask.ArcticSeas.cnrmcm7.nc', help='Path to the output netcdf file')
+# For grid N3.2_O1L42, mask.ArcticSeas.N3.2_O1L42.nc
+args = parser.parse_args()
 
-# Read longitudes, latitudes and land-sea mask
+maskfile  = args.maskfile
+gridfile  = args.gridfile
+msk_name  = args.msk
+umsk_name = args.umsk
+vmsk_name = args.vmsk
+lon_name  = args.lon
+lat_name  = args.lat
+outfile   = args.out
 
-if grid == 'N3.2_O1L42': 
-   
-   maskfile  = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
-   masktmp   = xr.open_dataset(maskfile)
-   msk_name  = 'tmask'
-   umsk_name = 'umaskutil'
-   vmsk_name = 'vmaskutil'
-   maskvar   = masktmp[msk_name].isel(t = 0, z = 0).squeeze(drop=True)
-   umaskvar  = masktmp[umsk_name].isel(t = 0).squeeze(drop=True)
-   vmaskvar  = masktmp[vmsk_name].isel(t = 0).squeeze(drop=True)
-
-   gridfile = '~/mytools/postdoc2014/MasksArctic/mesh_mask_nemo.N3.2_O1L42.nc'
-   lon_name = 'nav_lon'
-   lat_name = 'nav_lat'
-  
-   outfile = 'mask.ArcticSeas.N3.2_O1L42.nc'
-
-elif grid == 'cnrmcm7':
-
-   maskfile  = '~/mytools/cnrmcm7/masks/mesh_mask.nc'
-   masktmp   = xr.open_dataset(maskfile)
-   msk_name  = 'tmaskutil'
-   umsk_name = 'umaskutil'
-   vmsk_name = 'vmaskutil'
-   maskvar   = masktmp[msk_name].squeeze(drop=True)
-   umaskvar  = masktmp[umsk_name].squeeze(drop=True)
-   vmaskvar  = masktmp[vmsk_name].squeeze(drop=True)
-
-   gridfile = '/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc'
-   lon_name = 'glamt'
-   lat_name = 'gphit'
-
-   outfile = 'mask.ArcticSeas.cnrmcm7.nc'
-
+# Read land-sea masks
+if os.path.exists(os.path.expanduser(maskfile)):
+   masktmp = xr.open_dataset(os.path.expanduser(maskfile))
 else:
+   sys.exit('Mask file is missing')
 
-   sys.exit('unknown input grid')
+if msk_name not in masktmp:
+   sys.exit('Mask variable is missing from mask file')
 
-gridtmp = xr.open_dataset(gridfile)
+maskvar = masktmp[msk_name].squeeze(drop=True)
+# For grid N3.2_O1L42, tmask/umaskutil/vmaskutil have time and/or a
+# depth dimension of size > 1 : select the surface level explicitly before
+# squeezing, e.g. maskvar = masktmp[msk_name].isel(t = 0, z = 0).squeeze(drop=True)
+
+if umsk_name in masktmp:
+   umaskvar = masktmp[umsk_name].squeeze(drop=True)
+else:
+   umaskvar = None
+   warnings.warn("u-grid mask variable '" + umsk_name + "' is missing from mask file: framstru will not be computed")
+
+if vmsk_name in masktmp:
+   vmaskvar = masktmp[vmsk_name].squeeze(drop=True)
+else:
+   vmaskvar = None
+   warnings.warn("v-grid mask variable '" + vmsk_name + "' is missing from mask file: framstrv will not be computed")
+
+# Read latitudes and longitudes
+if os.path.exists(os.path.expanduser(gridfile)):
+   gridtmp = xr.open_dataset(os.path.expanduser(gridfile))
+else:
+   sys.exit('Grid file is missing')
+
+if lon_name not in gridtmp or lat_name not in gridtmp:
+   sys.exit('Longitude or latitude variable missing from grid file')
+
 longitude = gridtmp[lon_name].squeeze(drop=True)
 latitude = gridtmp[lat_name].squeeze(drop=True)
 
 if (latitude.shape != longitude.shape):
-    sys.exit('Latitudes, longitudes and mask don\'t have the same dimensions')
+    sys.exit('Latitudes and longitudes don\'t have the same dimensions')
+
+if (maskvar.shape != latitude.shape):
+    sys.exit('Mask and latitude/longitude don\'t have the same dimensions')
+
+if umaskvar is not None and umaskvar.shape != latitude.shape:
+    sys.exit('u-grid mask and latitude/longitude don\'t have the same dimensions')
+
+if vmaskvar is not None and vmaskvar.shape != latitude.shape:
+    sys.exit('v-grid mask and latitude/longitude don\'t have the same dimensions')
 
 # Define output dataset containing all new masks
 #
@@ -192,11 +221,15 @@ for jx in range(latitude.shape[1]):
   framstra[:, jx] = 0.
   if addpoint:
     framstra[jy, jx] = 1.
-framstru = xr.where(framstra, umaskvar, 0)
-framstrv = xr.where(framstra, vmaskvar, 0)
 newmask['framstra'] = xr.DataArray(framstra, attrs=dict(long_name = 'Fram Strait on t-grid'))
-newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait on u-grid'))
-newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
+
+if umaskvar is not None:
+  framstru = xr.where(framstra, umaskvar, 0)
+  newmask['framstru'] = xr.DataArray(framstru, attrs=dict(long_name = 'Fram Strait on u-grid'))
+
+if vmaskvar is not None:
+  framstrv = xr.where(framstra, vmaskvar, 0)
+  newmask['framstrv'] = xr.DataArray(framstrv, attrs=dict(long_name = 'Fram Strait on v-grid'))
 
 # 5b-5q. Arctic Ocean sub-divisions, based on
 # 
