@@ -51,9 +51,10 @@ crs = cdr['crs'].attrs
 if crs.get('grid_mapping_name') != 'polar_stereographic' or float(crs['latitude_of_projection_origin']) != 90.:
   sys.exit('Only the north polar stereographic projection is handled')
 
-# We need to account for the ellipsoid shape of Earth instead of a sphere, otherwise we could have a shift of
-# about 20km, about 1 grid cell. We read the parameters of the stereographic projection inside the NSIDC file
-# in case they change those parameters in next versions.
+# We need to account for the ellipsoid shape of Earth instead of a sphere, 
+# otherwise we could have a shift of about 20km, about 1 grid cell, near 
+# the pole. We read the parameters of the stereographic projection inside 
+# the NSIDC file in case they change those parameters in next versions.
 #
 # a is the radius of the Earth from the Earth center to the equator
 a     = float(crs['semi_major_axis'])
@@ -69,24 +70,27 @@ f     = 1. / float(crs['inverse_flattening'])
 e2    = 2. * f - f * f
 e     = np.sqrt(e2)
 
-# phi_c is the latitude at which the map is true to scale (k = 1): grid cells
-# are 25 km x 25 km on the Earth there. Cells are squares everywhere (conformal
-# projection) but larger on the Earth closer to the pole, smaller further south
+# phi_c is the latitude at which grid cells have dimension 25 km x 25 km. 
+# Cells are squares everywhere (conformal projection) but smaller squares when
+# closer to the pole, larger further south than phi_c
 phi_c = np.radians(float(crs['standard_parallel']))
-# lam0 is the longitude that goes toward the bottom when plotted. We need it to 
-# find the longitude of the x, y points (incorrect lam0 would mean systematic shift)
+# lam0 is the longitude that goes toward the bottom when the stereographic
+# projection is plotted. We need it to find the longitude of the x, y points 
+# (incorrect lam0 would mean systematic shift)
 lam0  = np.radians(float(crs['straight_vertical_longitude_from_pole']))
 
 x = cdr['x'].values
 y = cdr['y'].values
-# Rows follow y and columns follow x, as for the data variables (time, y, x)
+# x and y are list of coordinates
+# We turn those into a 2d-numpy-array, xx[j, i], yy[j, i]
+# j, i because that's how NSIDC data are organized
 xx, yy = np.meshgrid(x, y)
 
 # Snyder (1987), polar stereographic ellipsoidal formulas (t and m functions)
 def t_of(phi):
 # tan(pi/4 -pi/2) is the distance between a point and the center of the stereographic
 #       projection for a sphere
-# (1 - e * sin phi) / 1 + e * sin phi)
+# (1 - e * sin phi) / (1 + e * sin phi) ** e/2 is a correction factor for the ellipsoid
   return np.tan(np.pi / 4. - phi / 2.) / ((1. - e * np.sin(phi)) / (1. + e * np.sin(phi))) ** (e / 2.)
 
 def m_of(phi):
