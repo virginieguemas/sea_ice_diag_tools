@@ -107,7 +107,18 @@ outdataset = xr.Dataset(attrs=dict(description = outtitle + ' of variable ' + va
 area=dx*dy
 operation = {
   'mean' : lambda readyfield: readyfield.weighted(area).mean(dim=dims_to_reduce, skipna=True),
-  'sum'  : lambda readyfield: readyfield.weighted(area).sum(dim=dims_to_reduce, skipna=True) 
+  'sum'  : lambda readyfield: readyfield.weighted(area).sum(dim=dims_to_reduce, skipna=True)
+  }
+
+# Define whether we will estimate the total surface of each sea (for comparison between model
+# and observation) or the mean grid cell area within each sea
+area_operation = {
+  'mean' : lambda seaarea: seaarea.mean(),
+  'sum'  : lambda seaarea: seaarea.sum()
+  }
+area_attrs = {
+  'mean' : 'mean_cell_area_m2',
+  'sum'  : 'total_area_m2'
   }
 
 # Compute the area-averaged or area-integrated variable over each sea
@@ -120,7 +131,11 @@ for sea in lstmasks:
   if missing_in_sea.any():
     warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
   # Compute the average or the sum over the dimensions common between field and mask
-  outdataset[sea]= operation[meanORsum](masked_field).assign_attrs(dict(sea_name = mask.long_name))
+  # Compute also the total area or the mean grid cell area of the sea, stored as an attribute
+  seaarea = area.where(mask == 1)
+  attrs = dict(sea_name = mask.long_name)
+  attrs[area_attrs[meanORsum]] = float(area_operation[meanORsum](seaarea))
+  outdataset[sea]= operation[meanORsum](masked_field).assign_attrs(attrs)
 
 # Copy the attributes of the time and depth dimensions from the input data file
 for dim in extra_dims:
