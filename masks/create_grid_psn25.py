@@ -27,15 +27,13 @@ import xarray as xr
 parser = argparse.ArgumentParser(description='Builds a NEMO mesh_mask-like grid description file (glamt, gphit, tmaskutil, e1t, e2t) for the NSIDC polar stereographic north 25 km grid')
 parser.add_argument('--cdrfile', type=str, required=True, help='Path to a NOAA/NSIDC CDR V6 monthly north netcdf file (sic_psn25_YYYYMM_*_v06r00.nc)')
 parser.add_argument('--ocean_types', type=str, default='ocean,polehole_mask', help='Comma-separated surface_type_mask flags for surface types counted as ocean in tmaskutil (default: ocean,polehole_mask ; lake and coast are left out)')
-parser.add_argument('--checkfile', type=str, default=None, help='Optional netcdf file on the same grid (e.g. a CryoSat-2 RDEFT4 file) whose latitudes/longitudes are compared to the computed ones')
-parser.add_argument('--checklon', type=str, default='lon', help='Name of the longitude variable in checkfile')
-parser.add_argument('--checklat', type=str, default='lat', help='Name of the latitude variable in checkfile')
+# coast should be excluded because the land pollutes the radiation and sea ice concentration appears to be falsely high
+# This phenomenon is calles spillover.
 parser.add_argument('--out', type=str, default='grid.psn25.nc', help='Path to the output netcdf file')
 args = parser.parse_args()
 
 cdrfile     = args.cdrfile
 ocean_types = args.ocean_types.split(',')
-checkfile   = args.checkfile
 outfile     = args.out
 
 # Read the cell centre positions in meters and the projection parameters
@@ -186,25 +184,6 @@ grid['gphit']     = xr.DataArray(latitude, dims=dims, attrs=dict(long_name = 'La
 grid['tmaskutil'] = xr.DataArray(tmaskutil, dims=dims, attrs=dict(long_name = 'Land-sea mask (1 for ' + ', '.join(ocean_types) + ', 0 elsewhere)'))
 grid['e1t']       = xr.DataArray(e1t, dims=dims, attrs=dict(long_name = 'Cell length along x', units = 'm'))
 grid['e2t']       = xr.DataArray(e2t, dims=dims, attrs=dict(long_name = 'Cell length along y', units = 'm'))
-
-# Optional comparison with the latitudes/longitudes of another file on the same
-# grid, also against its north-south flipped version to detect an inverted y axis
-if checkfile is not None:
-  if os.path.exists(checkfile):
-    check = xr.open_dataset(checkfile)
-  else:
-    sys.exit('Check file is missing')
-  if args.checklon not in check or args.checklat not in check:
-    sys.exit('Longitude or latitude variable missing from check file')
-  checklon = check[args.checklon].squeeze(drop=True).values
-  checklat = check[args.checklat].squeeze(drop=True).values
-  if checklat.shape != latitude.shape:
-    print('Check file : latitudes have shape ' + str(checklat.shape) + ' instead of ' + str(latitude.shape))
-  else:
-    for orientation, clat, clon in [('as is', checklat, checklon), ('flipped along y', checklat[::-1, :], checklon[::-1, :])]:
-      dlat = np.nanmax(np.abs(clat - latitude))
-      dlon = np.nanmax(np.abs((clon - longitude + 180.) % 360. - 180.) * (latitude < 89.9))
-      print('Check file (' + orientation + ') : max |dlat| = %.4f deg, max |dlon| = %.4f deg' % (dlat, dlon))
 
 # Write the output netcdf file
 grid.to_netcdf(outfile)
