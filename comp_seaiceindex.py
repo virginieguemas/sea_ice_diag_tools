@@ -11,8 +11,16 @@ import datetime
 import getpass
 import argparse
 import warnings
+# We do not put import dask because xarray can call for dask if the option --chunk_time
+# is set to something else than 0 so that import dask is not necessary
+# Without import dask, the script works even if dask is not there but the option chunk_time
+# has no effect, only a warning if the user requests something different than 0.
+# With import dask, the script would stop if dask is not installed even if 
+# the user does not need the chunk_time option
 
+#===============================================================================
 # Input arguments
+#===============================================================================
 parser = argparse.ArgumentParser(description='Area-averages or area-integrates a variable (2d/3d/4d) in each of the seas described into the mask file')
 parser.add_argument('--data', type=str, required=True, help='Path to the input data netcdf file')
 parser.add_argument('--var', type=str, required=True, help='Name of the variable to average')
@@ -22,6 +30,7 @@ parser.add_argument('--dxvar', type=str, default="e1t", help='Name of the variab
 parser.add_argument('--dyvar', type=str, default="e2t", help='Name of the variable containing the length of grid cells along y dimension (in m)')
 parser.add_argument('--out', type=str, default="sia_per_sea.nc", help='Path to the output netcdf file')
 parser.add_argument('--meanORsum', type=str, default="sum", help='mean for an area-average / sum for an area-weighted sum (default : sum)')
+parser.add_argument('--chunk_time', type=int, default=0, help='Number of time steps read at once (requires dask), to limit the memory used by long time series; 0 (default) reads the whole field at once')
 args = parser.parse_args()
 
 datafile  = args.data
@@ -32,6 +41,7 @@ dxvar     = args.dxvar
 dyvar     = args.dyvar
 outfile   = args.out
 meanORsum = args.meanORsum
+chunk_time = args.chunk_time
 
 # Open input files
 if os.path.exists(datafile):
@@ -93,6 +103,15 @@ if len(dims_to_reduce) != 2:
 # Identify the other dimensions of field (e.g. time, depth)
 extra_dims = [dim for dim in field.dims if dim not in dims_to_reduce]
 
+# Read the field by pieces of chunk_time time steps along its first extra dimension
+# (time), instead of loading it entirely in memory : the computations below are then
+# only done when writing the output file, one piece at a time (using dask)
+if chunk_time > 0 and extra_dims:
+  try:
+    field = field.chunk({extra_dims[0]: chunk_time})
+  except (ImportError, ValueError) as error:
+    warnings.warn("Field could not be chunked (is dask installed ?), it is read at once : " + str(error))
+
 # Define output dataset containing the average or the integral over each sea
 if meanORsum == 'mean':
   outtitle = 'Area-average'
@@ -121,21 +140,37 @@ area_attrs = {
   'sum'  : 'total_area_m2'
   }
 
+# ============================================================================================
 # Compute the area-averaged or area-integrated variable over each sea
+# ============================================================================================
+#
+missing_checks = xr.Dataset() 
+# The test to check whether there is any missing value in each sea is stored in missing_checks
+# with one variable per sea to be executed all seas at once after the loop on seas for an 
+# optimal use of dask operations : we read all the input data only once for all seas at once
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
   masked_field = field.where(mask == 1)
-  # Check that field has no missing values within the sea (mask == 1)
-  missing_in_sea = (mask == 1) & field.isnull()
-  if missing_in_sea.any():
-    warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
-  # Compute the average or the sum over the dimensions common between field and mask
-  # Compute also the total area or the mean grid cell area of the sea, stored as an attribute
+  # Check that field has no missing values within the sea (mask == 1); the checks of all
+  # seas are evaluated together below, in a single reading of the field when it is chunked
+  missing_checks[sea] = ((mask == 1) & field.isnull()).any()
+  # Compute the total area or the mean grid cell area of the sea, stored as an attribute
   seaarea = area.where(mask == 1)
   attrs = dict(sea_name = mask.long_name)
   attrs[area_attrs[meanORsum]] = float(area_operation[meanORsum](seaarea))
+  # Compute the average or the sum over the dimensions common between field and mask
   outdataset[sea]= operation[meanORsum](masked_field).assign_attrs(attrs)
+# If field has been chunked through dask, the operations on field in the loop above are not 
+# performed just yet (only the sea areas, computed on the grid only are), these are stored by
+# dask to be executed chunk by chunk when computing missing_checks and when writing the output
+
+missing_checks = missing_checks.compute()
+# All computed at once : each chunk is read and checked for missing values in all seas, then
+# next chunk ... The result is True or False for each sea
+for sea in lstmasks:
+  if bool(missing_checks[sea]):
+    warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
 
 # Copy the attributes of the time and depth dimensions from the input data file
 for dim in extra_dims:
@@ -144,4 +179,3 @@ for dim in extra_dims:
 
 # Write the output netcdf file
 outdataset.to_netcdf(outfile)
-#sys.exit()

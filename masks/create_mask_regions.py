@@ -432,5 +432,3 @@ newmask['mediterr'] = xr.DataArray(mediterr, attrs=dict(long_name = 'Mediterrane
 # Write the output netcdf file
 #
 newmask.to_netcdf(outfile)
-sys.exit()
-
