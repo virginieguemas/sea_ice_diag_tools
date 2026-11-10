@@ -11,6 +11,7 @@ import datetime
 import getpass
 import argparse
 import warnings
+#
 # We do not put import dask because xarray can call for dask if the option --chunk_time
 # is set to something else than 0 so that import dask is not necessary
 # Without import dask, the script works even if dask is not there but the option chunk_time
@@ -109,6 +110,8 @@ extra_dims = [dim for dim in field.dims if dim not in dims_to_reduce]
 if chunk_time > 0 and extra_dims:
   try:
     field = field.chunk({extra_dims[0]: chunk_time})
+    # field is cut in pieces of length chunk_time along the first dimension which is not
+    # common between mask and field : it should be the time (depth might come second)
   except (ImportError, ValueError) as error:
     warnings.warn("Field could not be chunked (is dask installed ?), it is read at once : " + str(error))
 
@@ -159,8 +162,14 @@ for sea in lstmasks:
   seaarea = area.where(mask == 1)
   attrs = dict(sea_name = mask.long_name)
   attrs[area_attrs[meanORsum]] = float(area_operation[meanORsum](seaarea))
+  # Is there at least one value in the sea for each time step (i.e. across all dims_to_reduce) ?
+  has_data = masked_field.notnull().any(dim=dims_to_reduce)
   # Compute the average or the sum over the dimensions common between field and mask
-  outdataset[sea]= operation[meanORsum](masked_field).assign_attrs(attrs)
+  outdataset[sea]=operation[meanORsum](masked_field).where(has_data).assign_attrs(attrs)
+  # A time step without any value in the sea (e.g. a month missing in an observational
+  # product) gets NaN thanks to where(has_data) which is True/False if there is at least one
+  # value / none which is not NaN: the weighted sum of no value at all would otherwise be 0
+  #
 # If field has been chunked through dask, the operations on field in the loop above are not 
 # performed just yet (only the sea areas, computed on the grid only are), these are stored by
 # dask to be executed chunk by chunk when computing missing_checks and when writing the output
