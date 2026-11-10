@@ -155,15 +155,17 @@ for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
   masked_field = field.where(mask == 1)
+  # Is there at least one value in the sea for each time step (i.e. across all dims_to_reduce) ?
+  has_data = masked_field.notnull().any(dim=dims_to_reduce)
   # Check that field has no missing values within the sea (mask == 1); the checks of all
   # seas are evaluated together below, in a single reading of the field when it is chunked
-  missing_checks[sea] = ((mask == 1) & field.isnull()).any()
+  # Time steps entirely missing in the sea (has_data False) are not reported: their result
+  # is NaN in the output file, which already shows that they are missing
+  missing_checks[sea] = ((mask == 1) & field.isnull() & has_data).any()
   # Compute the total area or the mean grid cell area of the sea, stored as an attribute
   seaarea = area.where(mask == 1)
   attrs = dict(sea_name = mask.long_name)
   attrs[area_attrs[meanORsum]] = float(area_operation[meanORsum](seaarea))
-  # Is there at least one value in the sea for each time step (i.e. across all dims_to_reduce) ?
-  has_data = masked_field.notnull().any(dim=dims_to_reduce)
   # Compute the average or the sum over the dimensions common between field and mask
   outdataset[sea]=operation[meanORsum](masked_field).where(has_data).assign_attrs(attrs)
   # A time step without any value in the sea (e.g. a month missing in an observational
