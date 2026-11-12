@@ -175,7 +175,7 @@ if zero_if_any_zero and len(fields) > 1:
   for other_field in fields[1:]:
     any_zero = any_zero | (other_field == 0)
   field = field.where(~any_zero, 0.)
-  # wherever none of the variables is 0, the product is kept, otherwise it is set to 0 
+  # wherever none of the variables is 0, the product is kept, otherwise it is set to 0
 
 # Define output dataset containing the average or the integral over each sea
 if meanORsum == 'mean':
