@@ -1,6 +1,6 @@
 # This script computes the area-average or the area-integral of a variable or  #
 # of a product of variables in each of the seas described in a mask file.      #
-# The input variable(s) can be 2d/3d/4d.                                          #
+# The input variable(s) can be 2d/3d/4d.                                       #
 #                                                                              #
 # History : 2026 - initial version by Virginie Guemas                          #
 ################################################################################
@@ -26,7 +26,7 @@ parser = argparse.ArgumentParser(description='Area-averages or area-integrates a
 parser.add_argument('--data', type=str, nargs='+', required=True, help='Path to the input data netcdf file(s) : either one file containing all the variables of --var, or one file per variable, in the same order as --var')
 parser.add_argument('--var', type=str, nargs='+', required=True, help='Name of the variable to average or integrate; if several names are given (e.g. --var sithic siconc), their product is averaged or integrated')
 parser.add_argument('--scale', type=float, nargs='+', default=None, help='One multiplicative factor per variable of --var, in the same order, applied before the product (e.g. 0.01 for a concentration in percent); default : 1 for all variables')
-parser.add_argument('--zero_if_any_zero', action='store_true', help='Set the product to 0 wherever one of the variables is 0, even if another one is missing (NaN) there (e.g. sithic x siconc : no ice volume where siconc is 0, with --zero_if_any_zero, we obtain 0, otherwise NaN)')
+parser.add_argument('--zero_if_any_zero', action='store_true', help='Set the product to 0 wherever one of the variables is 0, even if another one is missing (NaN) there (e.g. sithic x siconc : no ice volume where siconc is 0 and sithic is NaN, we obtain 0 with --zero_if_any_zero, otherwise NaN)')
 parser.add_argument('--mask', type=str, default="/home/guemas/tmp/test_regions/mask.ArcticSeas.cnrmcm7.nc", help='Path to the mask netcdf file (containing various sea masks (1/0)')
 parser.add_argument('--grid', type=str, default="/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc", help='Path to the grid description netcdf file')
 parser.add_argument('--dxvar', type=str, default="e1t", help='Name of the variable containing the length of grid cells along x dimension (in m)')
@@ -58,7 +58,7 @@ elif len(datafiles) != len(variables):
 if scales is None:
   scales = [1.] * len(variables)
 elif len(scales) != len(variables):
-  sys.exit('--scale if present, must give one factor per variable of --var')
+  sys.exit('--scale, if present, must give one factor per variable of --var')
 
 # Open input files (each distinct data file is opened only once)
 datasets = dict()
@@ -82,7 +82,7 @@ else:
 # Read input variables
 fields = [] # fields is a list of DataArray corresponding to the input variables
 for variable, datafile in zip(variables, datafiles):
-  # variables and datafiles are two lists of same length (checked l. 53-54)
+  # variables and datafiles are two lists of same length (checked above)
   # zip allows to pair them in the order they appear to loop on those pairs
   if variable in datasets[datafile]:
     fields.append(datasets[datafile][variable])
@@ -149,8 +149,8 @@ if chunk_time > 0 and extra_dims:
     warnings.warn("Field could not be chunked (is dask installed ?), it is read at once : " + str(error))
 
 # Several variables : check that they have exactly the same coordinates (mainly the same dates, 
-# potentially the same depth); join='exact' stops the script if they don't, 
-# Without this test, we would drop silently the times and depths which are present in only one 
+# potentially the same depth); join='exact' stops the script if they don't. 
+# Without this test, we would silently drop the times and depths which are present in only one 
 # of the fields
 if len(fields) > 1:
   try:
@@ -164,7 +164,7 @@ if len(fields) > 1:
 fields = [field * scale for field, scale in zip(fields, scales)]
 field = fields[0]
 for other_field in fields[1:]:
-  # if fields only contain one element, fields[1:] is empty and we skip this loop  
+  # if fields only contains one element, fields[1:] is empty and we skip this loop 
   field = field * other_field
 
 # With --zero_if_any_zero, the product is 0 wherever one of the variables is 0, even if another
@@ -175,7 +175,7 @@ if zero_if_any_zero and len(fields) > 1:
   for other_field in fields[1:]:
     any_zero = any_zero | (other_field == 0)
   field = field.where(~any_zero, 0.)
-  # wherever, we do not have any zero in the field, we keep its value, otherwise 0 
+  # wherever none of the variables is 0, the product is kept, otherwise it is set to 0 
 
 # Define output dataset containing the average or the integral over each sea
 if meanORsum == 'mean':
