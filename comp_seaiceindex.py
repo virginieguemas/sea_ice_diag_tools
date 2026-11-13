@@ -27,6 +27,7 @@ parser.add_argument('--data', type=str, nargs='+', required=True, help='Path to 
 parser.add_argument('--var', type=str, nargs='+', required=True, help='Name of the variable to average or integrate; if several names are given (e.g. --var sithic siconc), their product is averaged or integrated')
 parser.add_argument('--scale', type=float, nargs='+', default=None, help='One multiplicative factor per variable of --var, in the same order, applied before the product (e.g. 0.01 for a concentration in percent); default : 1 for all variables')
 parser.add_argument('--zero_if_any_zero', action='store_true', help='Set the product to 0 wherever one of the variables is 0, even if another one is missing (NaN) there (e.g. sithic x siconc : no ice volume where siconc is 0 and sithic is NaN, we obtain 0 with --zero_if_any_zero, otherwise NaN)')
+parser.add_argument('--threshold', type=float, default=None, help='If given, the field (after --scale and the product) is replaced by 1 where it is >= threshold and by 0 where it is below (NaN stays NaN), so that its area-integral is the area where the field reaches the threshold (e.g. sea ice extent : --var siconc --threshold 0.15 with siconc as a fraction); default : no threshold')
 parser.add_argument('--mask', type=str, default="/home/guemas/tmp/test_regions/mask.ArcticSeas.cnrmcm7.nc", help='Path to the mask netcdf file (containing various sea masks (1/0)')
 parser.add_argument('--grid', type=str, default="/home/guemas/mytools/cnrmcm7/masks/mesh_mask.nc", help='Path to the grid description netcdf file')
 parser.add_argument('--dxvar', type=str, default="e1t", help='Name of the variable containing the length of grid cells along x dimension (in m)')
@@ -40,6 +41,7 @@ datafiles = args.data
 variables = args.var
 scales    = args.scale
 zero_if_any_zero = args.zero_if_any_zero
+threshold = args.threshold
 maskfile  = args.mask
 gridfile  = args.grid
 dxvar     = args.dxvar
@@ -177,6 +179,13 @@ if zero_if_any_zero and len(fields) > 1:
   field = field.where(~any_zero, 0.)
   # wherever none of the variables is 0, the product is kept, otherwise it is set to 0
 
+# With --threshold, the field becomes 1 where it reaches the threshold and 0 elsewhere, missing
+# values (NaN) are kept as NaN : its area-integral is then the area where the field reaches the
+# threshold (e.g. sea ice extent = area of the grid cells with a concentration >= 0.15)
+if threshold is not None:
+  field = xr.where(field >= threshold, 1., 0.).where(field.notnull())
+  # NaN >= threshold is False, which would give 0 : .where(field.notnull()) puts NaN back
+
 # Define output dataset containing the average or the integral over each sea
 if meanORsum == 'mean':
   outtitle = 'Area-average'
@@ -188,6 +197,8 @@ else:
 # Description of what is averaged or integrated, e.g. 'sithic x siconc' or '0.01 x ice_con'
 description = ' x '.join([variable if scale == 1. else '%g x %s' % (scale, variable)
                           for variable, scale in zip(variables, scales)])
+if threshold is not None:
+  description = '(' + description + ' >= %g)' % threshold
 outdataset = xr.Dataset(attrs=dict(description = outtitle + ' of ' + description + ' for individual seas and regions', based_on_mask = maskfile, using_variable_file = ', '.join(datasets.keys()), creation_date = str(datetime.datetime.now()), created_by = getpass.getuser()))
 
 # Define the operation to be applied
