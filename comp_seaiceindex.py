@@ -224,24 +224,30 @@ area_attrs = {
 # ============================================================================================
 #
 missing_checks = xr.Dataset()
-# The test to check whether there is any missing value in each sea is stored in missing_checks
-# with one variable per sea to be executed all seas at once after the loop on seas for an
-# optimal use of dask operations : we read all the input data only once for all seas at once
+# The number of missing values in each sea, and the number of values checked, are stored in
+# missing_checks with two variables per sea, to be computed for all seas at once after the loop
+# on seas for an optimal use of dask operations : we read all the input data only once for all seas
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
   masked_field = field.where(mask == 1)
+  #--------------------------------------------------------------------------------------------
   # Is there at least one value in the sea for each time step (i.e. across all dims_to_reduce) ?
   has_data = masked_field.notnull().any(dim=dims_to_reduce)
   # Check that field has no missing values within the sea (mask == 1); the checks of all
   # seas are evaluated together below, in a single reading of the field when it is chunked
   # Time steps entirely missing in the sea (has_data False) are not reported: their result
   # is NaN in the output file, which already shows that they are missing
-  missing_checks[sea] = ((mask == 1) & field.isnull() & has_data).any()
+  missing_checks['missing_' + sea] = ((mask == 1) & field.isnull() & has_data).sum()
+  # number of missing values in the sea, over the time steps with data
+  missing_checks['checked_' + sea] = ((mask == 1) & has_data).sum()
+  # number of values checked: number of points of the sea x number of time steps with data
+  #--------------------------------------------------------------------------------------------
   # Compute the total area or the mean grid cell area of the sea, stored as an attribute
   seaarea = area.where(mask == 1)
   attrs = dict(sea_name = mask.long_name)
   attrs[area_attrs[meanORsum]] = float(area_operation[meanORsum](seaarea))
+  #--------------------------------------------------------------------------------------------  
   # Compute the average or the sum over the dimensions common between field and mask
   outdataset[sea]=operation[meanORsum](masked_field).where(has_data).assign_attrs(attrs)
   # A time step without any value in the sea (e.g. a month missing in an observational
@@ -254,10 +260,14 @@ for sea in lstmasks:
 
 missing_checks = missing_checks.compute()
 # All computed at once : each chunk is read and checked for missing values in all seas, then
-# next chunk ... The result is True or False for each sea
+# next chunk ... The result is a number of missing values and of values checked for each sea
 for sea in lstmasks:
-  if bool(missing_checks[sea]):
-    warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1")
+  n_missing = int(missing_checks['missing_' + sea])
+  if n_missing > 0:
+    percent = 100. * n_missing / int(missing_checks['checked_' + sea])
+    percent_text = '%.1f%%' % percent if percent >= 0.1 else '< 0.1%'
+    warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1 (" +
+                  percent_text + " of the sea points, over the time steps with data)")
 
 # Copy the attributes of the time and depth dimensions from the input data file
 for dim in extra_dims:
