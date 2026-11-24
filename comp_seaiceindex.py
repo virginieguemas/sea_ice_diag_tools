@@ -224,9 +224,10 @@ area_attrs = {
 # ============================================================================================
 #
 missing_checks = xr.Dataset()
-# The number of missing values in each sea, and the number of values checked, are stored in
-# missing_checks with two variables per sea, to be computed for all seas at once after the loop
-# on seas for an optimal use of dask operations : we read all the input data only once for all seas
+# The number of missing values in each sea, the number of values checked and the number of time
+# steps with data are stored in missing_checks with three variables per sea, to be computed for
+# all seas at once after the loop on seas for an optimal use of dask operations : we read all 
+# the input data only once for all seas
 for sea in lstmasks:
   mask = maskdataset[sea].squeeze()
   # Apply mask
