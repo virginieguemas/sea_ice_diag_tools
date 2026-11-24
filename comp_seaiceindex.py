@@ -242,6 +242,8 @@ for sea in lstmasks:
   # number of missing values in the sea, over the time steps with data
   missing_checks['checked_' + sea] = ((mask == 1) & has_data).sum()
   # number of values checked: number of points of the sea x number of time steps with data
+  missing_checks['steps_' + sea] = has_data.sum()
+  # number of time steps with data in the sea
   #--------------------------------------------------------------------------------------------
   # Compute the total area or the mean grid cell area of the sea, stored as an attribute
   seaarea = area.where(mask == 1)
@@ -266,8 +268,9 @@ for sea in lstmasks:
   if n_missing > 0:
     percent = 100. * n_missing / int(missing_checks['checked_' + sea])
     percent_text = '%.1f%%' % percent if percent >= 0.1 else '< 0.1%'
+    n_steps = int(missing_checks['steps_' + sea])
     warnings.warn("Missing values found in field for sea '" + sea + "' where mask == 1 (" +
-                  percent_text + " of the sea points, over the time steps with data)")
+                  percent_text + " of the sea points, over all the %d time steps with data)" % n_steps)
 
 # Copy the attributes of the time and depth dimensions from the input data file
 for dim in extra_dims:
